@@ -1,22 +1,76 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebaseConfig"; // Adjust import based on your project structure
 import "./Navbar.css";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const auth = getAuth();
+
+  const [user, setUser] = useState(null);
+  const [signupType, setSignupType] = useState(null);
+  const [photoURL, setPhotoURL] = useState("");
+
+  const dummyPhoto = "images/dummy-user-image.jpg"; // Replace with actual dummy image path
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setSignupType(userData.signupType);
+          setPhotoURL(userData.photoURL || dummyPhoto);
+        }
+      } else {
+        setUser(null);
+        setSignupType(null);
+        setPhotoURL("");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
+  const handleLogoClick = () => {
+    if (!user) {
+      navigate("/");
+    } else {
+      navigate(signupType === "Foodie" ? "/foodie" : "/food-seller");
+    }
+  };
 
   return (
     <nav className="nav-container">
-      <div className="nav-left">
-        {/* <span className="nav-brand">EazyBites</span> */}
-        <img src="images/EazyBites.png" className="nav-name" alt="logo" />
+      <div className="nav-left" >
+        <img src="images/EazyBites.png" className="nav-name" alt="logo" onClick={handleLogoClick} style={{ cursor: "pointer" }} />
       </div>
-      <div className="nav-center">
-        <img src="final_logo.png" alt="Logo" className="nav-logo" />
+      <div className="nav-center" >
+        <img src="final_logo.png" alt="Logo" className="nav-logo" onClick={handleLogoClick} style={{ cursor: "pointer" }} />
       </div>
       <div className="nav-right">
-        <button className="nav-button">About Us</button>
-        <button className="nav-button" onClick={() => navigate("/login")}>Login</button>
+        {user ? (
+          <>
+            <button className="nav-dashboard" onClick={() => navigate("/dashboard")}>
+              <img src={photoURL} alt="User" className="nav-profile-pic" />
+            </button>
+            <button
+              className="nav-button"
+              onClick={() => navigate(signupType === "Foodie" ? "/my-orders" : "/my-stall")}
+            >
+              {signupType === "Foodie" ? "My Orders" : "My Stall"}
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="nav-button">About Us</button>
+            <button className="nav-button" onClick={() => navigate("/login")}>Login</button>
+          </>
+        )}
       </div>
     </nav>
   );

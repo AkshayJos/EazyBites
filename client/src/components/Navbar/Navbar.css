@@ -66,26 +66,69 @@
   }
   
   /* Responsive Design */
-  @media (max-width: 768px) {
-    .nav-container {
-      flex-direction: column;
-      text-align: center;
-    }
+@media (max-width: 768px) {
+  .nav-container {
+    flex-wrap: wrap;
+    text-align: center;
+    padding: 10px;
+  }
+
+  .nav-left, .nav-center {
+    flex: unset;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-left {
+    justify-content: flex-start;
+  }
+
+  .nav-center {
+    justify-content: center;
+    flex-grow: 1;
+  }
+
+  .nav-right {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  .nav-name {
+    width: 35vh; /* Reduce logo size */
+    height: 50px;
+  }
+
+  .nav-logo {
+    width: 80px;
+    height: 50px;
+  }
+
+  .nav-button {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
+
+  .nav-dashboard {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
   
-    .nav-left, .nav-right {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-      margin: 5px 0;
-    }
+  .nav-profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    transition: transform 0.3s ease-in-out;
+  }
   
-    .nav-center {
-      order: -1; /* Puts logo at the top */
-    }
-  
-    .nav-button {
-      font-size: 12px;
-      padding: 5px 10px;
-    }
+  .nav-profile-pic:hover {
+    transform: scale(1.1);
   }
   

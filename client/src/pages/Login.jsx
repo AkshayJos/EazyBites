@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    signInWithPopup, 
-    GoogleAuthProvider, 
-    RecaptchaVerifier, 
-    signInWithPhoneNumber 
+import {
+    signInWithPopup,
+    GoogleAuthProvider,
+    RecaptchaVerifier,
+    signInWithPhoneNumber,
+    onAuthStateChanged
 } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -24,6 +25,26 @@ const setupRecaptcha = () => {
 };
 
 const Login = () => {
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+    
+                    if (userDoc.exists()) {
+                        const userType = userDoc.data().signupType;
+                        navigate(userType === "Foodie" ? "/foodie" : "/food-seller");
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            }
+        });
+    
+        return () => unsubscribe();
+    }, []);
+
     const navigate = useNavigate();
     const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState("");
@@ -31,6 +52,8 @@ const Login = () => {
     const [isVerifying, setIsVerifying] = useState(false);
     const [timer, setTimer] = useState(0);
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+    const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+    const [signupUser, setSignupUser] = useState(null);
     const provider = new GoogleAuthProvider();
 
     useEffect(() => {
@@ -45,33 +68,61 @@ const Login = () => {
         return () => clearInterval(interval);
     }, [timer]);
 
-    const handleSignup = (type) => {
-        navigate(`/signup?type=${type}`);
-    };
-
-    const redirectToSignup = async (user, isGoogleSignup) => {
+    const redirectToDashboard = async (user) => {
         try {
             const userDocRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userDocRef);
 
-            if (!userDoc.exists()) {
-                navigate(`/signup?type=${isGoogleSignup ? 'Foodie' : ''}`);
-                return false;
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const userType = userData.signupType;
+
+                if (userType === "Foodie") {
+                    navigate("/foodie");
+                } else if (userType === "Food Seller") {
+                    navigate("/food-seller");
+                } else {
+                    console.error("Invalid signup type:", userType);
+                    navigate("/login");
+                }
+            } else {
+                // If user does not exist, show signup prompt
+                setSignupUser(user);
+                setShowSignupPrompt(true);
             }
-            return true;
         } catch (error) {
             console.error("Error checking user:", error);
-            return false;
         }
     };
+
+    const handleSignup = (type) => {
+        navigate(`/signup?type=${type}`);
+    };
+
+    // const redirectToSignup = async (user, isGoogleSignup) => {
+    //     try {
+    //         const userDocRef = doc(db, "users", user.uid);
+    //         const userDoc = await getDoc(userDocRef);
+
+    //         if (!userDoc.exists()) {
+    //             navigate(`/signup?type=${isGoogleSignup ? 'Foodie' : ''}`);
+    //             return false;
+    //         }
+    //         return true;
+    //     } catch (error) {
+    //         console.error("Error checking user:", error);
+    //         return false;
+    //     }
+    // };
 
     const handleGoogleLogin = async () => {
         try {
             const result = await signInWithPopup(auth, provider);
-            const userExists = await redirectToSignup(result.user, true);
-            if (userExists) {
-                navigate("/dashboard");
-            }
+            // const userExists = await redirectToSignup(result.user, true);
+            // if (userExists) {
+            //     navigate("/dashboard");
+            // }
+            await redirectToDashboard(result.user);
         } catch (error) {
             console.error("Google Login Error:", error);
         }
@@ -109,10 +160,11 @@ const Login = () => {
 
         try {
             const result = await confirmationResult.confirm(otp);
-            const userExists = await redirectToSignup(result.user, false);
-            if (userExists) {
-                navigate("/dashboard");
-            }
+            // const userExists = await redirectToSignup(result.user, false);
+            // if (userExists) {
+            //     navigate("/dashboard");
+            // }
+            await redirectToDashboard(result.user);
         } catch (error) {
             console.error("OTP Verification Error:", error);
             alert("Invalid OTP. Please try again.");
@@ -128,7 +180,7 @@ const Login = () => {
             const appVerifier = window.recaptchaVerifier;
             const formattedPhone = `+${phone}`;
             const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-            
+
             setConfirmationResult(confirmation);
             setIsVerifying(true);
             setTimer(60);
@@ -144,86 +196,99 @@ const Login = () => {
     return (
         <div className="login-container">
             <h2 className="login-title">Login</h2>
-
-            {!isVerifying && (
+            {!showSignupPrompt ? (
                 <>
-                    <div className="login-phone-container">
-                        <PhoneInput
-                            country={'in'}
-                            value={phone}
-                            onChange={setPhone}
-                            inputClass="login-input"
-                            containerClass="phone-input-container"
-                            buttonClass="country-dropdown"
-                            placeholder="Enter phone number"
-                        />
-                        <button 
-                            className="login-submit-btn" 
-                            onClick={sendOTP}
-                            disabled={isButtonDisabled}
-                        >
-                            Send OTP
-                        </button>
-                    </div>
-                    <div>
-                        <p className="login-or-divider" id="or">OR</p>
-                    </div>
-                    <button 
-                        className="login-google-btn"
-                        onClick={handleGoogleLogin}
-                    >
-                        <img src="/images/googleLogo.png" alt="Google logo" className="google-logo" />
-                        Login with Google
-                    </button>
-
-                    <div className="login-signup-section">
-                        <p>Don't have an account?</p>
-                        <div className="login-signup-buttons">
-                            <button 
-                                className="login-hero-button" 
-                                onClick={() => handleSignup("Foodie")}
+                    {!isVerifying && (
+                        <>
+                            <div className="login-phone-container">
+                                <PhoneInput
+                                    country={'in'}
+                                    value={phone}
+                                    onChange={setPhone}
+                                    inputClass="login-input"
+                                    containerClass="phone-input-container"
+                                    buttonClass="country-dropdown"
+                                    placeholder="Enter phone number"
+                                />
+                                <button
+                                    className="login-submit-btn"
+                                    onClick={sendOTP}
+                                    disabled={isButtonDisabled}
+                                >
+                                    Send OTP
+                                </button>
+                            </div>
+                            <div>
+                                <p className="login-or-divider" id="or">OR</p>
+                            </div>
+                            <button
+                                className="login-google-btn"
+                                onClick={handleGoogleLogin}
                             >
-                                Signup as Foodie
+                                <img src="/images/googleLogo.png" alt="Google logo" className="google-logo" />
+                                Login with Google
                             </button>
-                            <button 
-                                className="login-hero-button" 
-                                onClick={() => handleSignup("Food Seller")}
-                            >
-                                Signup as Food Seller
-                            </button>
-                        </div>
-                    </div>
-                </>
-            )}
 
-            {isVerifying && (
-                <div className="login-otp-container">
-                    <input
-                        className="login-input"
-                        type="text"
-                        placeholder="Enter OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        maxLength={6}
-                    />
-                    <button 
-                        className="login-submit-btn" 
-                        onClick={verifyOtp}
-                        disabled={otp.length !== 6}
-                    >
-                        Verify OTP
-                    </button>
-                    {timer > 0 ? (
-                        <div className="timer">Resend OTP in {timer}s</div>
-                    ) : (
-                        <button 
-                            className="resend-btn" 
-                            onClick={handleResendOTP}
-                            disabled={isButtonDisabled}
-                        >
-                            Resend OTP
-                        </button>
+                            <div className="login-signup-section">
+                                <p>Don't have an account?</p>
+                                <div className="login-signup-buttons">
+                                    <button
+                                        className="login-hero-button"
+                                        onClick={() => handleSignup("Foodie")}
+                                    >
+                                        Signup as Foodie
+                                    </button>
+                                    <button
+                                        className="login-hero-button"
+                                        onClick={() => handleSignup("Food Seller")}
+                                    >
+                                        Signup as Food Seller
+                                    </button>
+                                </div>
+                            </div>
+                        </>
                     )}
+
+                    {isVerifying && (
+                        <div className="login-otp-container">
+                            <input
+                                className="login-input"
+                                type="text"
+                                placeholder="Enter OTP"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                maxLength={6}
+                            />
+                            <button
+                                className="login-submit-btn"
+                                onClick={verifyOtp}
+                                disabled={otp.length !== 6}
+                            >
+                                Verify OTP
+                            </button>
+                            {timer > 0 ? (
+                                <div className="timer">Resend OTP in {timer}s</div>
+                            ) : (
+                                <button
+                                    className="resend-btn"
+                                    onClick={handleResendOTP}
+                                    disabled={isButtonDisabled}
+                                >
+                                    Resend OTP
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className="signup-prompt">
+                    <p>You don't have an account yet. Please sign up first.</p>
+                    <button className="signup-btn" onClick={() => navigate("/signup?type=Foodie")}>
+                        Signup as Foodie
+                    </button>
+                    <button className="signup-btn" onClick={() => navigate("/signup?type=Food Seller")}>
+                        Signup as Food Seller
+                    </button>
                 </div>
             )}
 
