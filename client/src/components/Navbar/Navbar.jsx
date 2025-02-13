@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig"; // Adjust import based on your project structure
 import "./Navbar.css";
+import { useScrollNavigation } from '../../hooks/useScrollNavigation';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const auth = getAuth();
+  const { navigateAndScroll } = useScrollNavigation();
 
   const [user, setUser] = useState(null);
   const [signupType, setSignupType] = useState(null);
@@ -44,6 +46,10 @@ const Navbar = () => {
     }
   };
 
+  const handleAboutUsClick = () => {
+    navigateAndScroll('/', 'about-us-section');
+  };
+
   return (
     <nav className="nav-container">
       <div className="nav-left" >
@@ -55,7 +61,7 @@ const Navbar = () => {
       <div className="nav-right">
         {user ? (
           <>
-            <button className="nav-dashboard" onClick={() => navigate("/dashboard")}>
+            <button className="nav-dashboard" onClick={() => navigate(signupType === "Foodie" ? "/foodie" : "/food-seller")}>
               <img src={photoURL} alt="User" className="nav-profile-pic" />
             </button>
             <button
@@ -67,7 +73,9 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <button className="nav-button">About Us</button>
+            <button className="nav-button" onClick={handleAboutUsClick}>
+              About Us
+            </button>
             <button className="nav-button" onClick={() => navigate("/login")}>Login</button>
           </>
         )}

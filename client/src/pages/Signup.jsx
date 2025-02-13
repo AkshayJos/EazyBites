@@ -19,7 +19,7 @@ const setupRecaptcha = () => {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
             size: "invisible",
             callback: (response) => {
-                console.log("Recaptcha resolved:", response);
+                // console.log("Recaptcha resolved:", response);
             },
         });
     }
@@ -86,8 +86,13 @@ const Signup = () => {
     };
 
     const saveUserToFirestore = async (user, isGoogleSignup) => {
-        if (await checkUserExists(user.uid)) {
+        const exists = await checkUserExists(user.uid);
+        if (exists) {
             setUserExists(true);
+            await auth.signOut();
+            console.log("User Already exists.");
+            alert("Account already exists. Redirecting to Login...");
+            navigate("/login");
             return;
         }
 
@@ -118,9 +123,12 @@ const Signup = () => {
 
         try {
             const result = await signInWithPopup(auth, provider);
-            console.log("Google User:", result.user);
-            if (await checkUserExists(result.user.uid)) {
-                setUserExists(true);
+            const exists = await checkUserExists(result.user.uid);
+            if (exists) {
+                console.log("Google account already exists. Redirecting to login...");
+                await auth.signOut(); // Force logout
+                alert("Account already exists. Redirecting to Login...");
+                navigate("/login");
                 return;
             }
             await saveUserToFirestore(result.user, true);
@@ -192,8 +200,12 @@ const Signup = () => {
 
         try {
             const result = await confirmationResult.confirm(otp);
-            if (await checkUserExists(result.user.uid)) {
-                setUserExists(true);
+            const exists = await checkUserExists(result.user.uid);
+            if (exists) {
+                console.log("Phone account already exists. Redirecting to login...");
+                await auth.signOut(); // Force Logout
+                alert("Account already exists. Redirecting to Login...");
+                navigate("/login");
                 return;
             }
             await saveUserToFirestore(result.user, false);

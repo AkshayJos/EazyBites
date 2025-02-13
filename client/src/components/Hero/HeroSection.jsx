@@ -45,13 +45,13 @@ const HeroSection = () => {
       </motion.div>
 
       {/* Scroll Indicator */}
-      {/* <motion.div
+      <motion.div
         className="scroll-indicator"
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 1.5 }}
       >
         ↓ Scroll Down ↓
-      </motion.div> */}
+      </motion.div>
     </section>
   );
 };
