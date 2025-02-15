@@ -1,0 +1,109 @@
+.testimonials-container {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+  
+  .testimonials-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+  }
+  
+  .testimonials-content {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  
+  .testimonials-image-container {
+    width: 8rem;
+    height: 8rem;
+    flex-shrink: 0;
+  }
+  
+  .testimonials-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .testimonials-text-content {
+    text-align: left;
+  }
+  
+  .testimonials-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1a1a1a;
+  }
+  
+  .testimonials-description {
+    color: #666666;
+    line-height: 1.5;
+  }
+  
+  .testimonials-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
+  .testimonials-indicator-dot {
+    height: 0.5rem;
+    width: 0.5rem;
+    border-radius: 9999px;
+    background-color: #d1d5db;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .testimonials-indicator-dot.active {
+    background-color: #3b82f6;
+    width: 1rem;
+  }
+  
+  /* Media Queries for Responsive Design */
+  @media (max-width: 768px) {
+    .testimonials-content {
+      flex-direction: column;
+      text-align: center;
+    }
+  
+    .testimonials-image-container {
+      width: 6rem;
+      height: 6rem;
+    }
+  
+    .testimonials-text-content {
+      text-align: center;
+    }
+  }
+  
+  /* Animation Classes */
+  .testimonials-fade-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .testimonials-fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  
+  .testimonials-fade-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .testimonials-fade-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.5s, transform 0.5s;
+  }

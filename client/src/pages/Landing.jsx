@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import HeroSection from "../components/Hero/HeroSection";
 import AboutUs from "../components/Hero/AboutUs";
+import Testimonials from "../components/Hero/Testimonials";
 
 const Landing = () => {
   const aboutUsRef = useRef(null);
@@ -19,6 +20,7 @@ const Landing = () => {
   return (
     <>
       <HeroSection />
+      <Testimonials />
       <AboutUs ref={aboutUsRef} />
     </>
   );
