@@ -9,7 +9,8 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import FoodSeller from "./pages/FoodSeller/FoodSeller";
 import Foodie from "./pages/Foodie/Foodie";
-import EditProfile from "./pages/Foodie/EditProfile";
+import EditProfileFoodie from "./pages/Foodie/EditProfile";
+import EditProfileSeller from "./pages/FoodSeller/EditProfile";
 
 function App() {
   return (
@@ -22,7 +23,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/food-seller" element={<FoodSeller />} />
           <Route path="/foodie" element={<Foodie />} />
-          <Route path="/foodie-edit-profile" element={<EditProfile />} />
+          <Route path="/foodie-edit-profile" element={<EditProfileFoodie />} />
+          <Route path="/seller-edit-profile" element={<EditProfileSeller />} />
         </Routes>
         <Footer />
       </Router>

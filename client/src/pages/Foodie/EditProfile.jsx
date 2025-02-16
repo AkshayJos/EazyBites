@@ -24,6 +24,7 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [otp, setOtp] = useState('');
@@ -169,16 +170,23 @@ const EditProfile = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       await axios.patch(`${API}/users/${uid}`, formData);
       setSuccessMessage('Profile updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setTimeout(() => {
+        setSuccessMessage('');
+        setTimeout(() => navigate(`/foodie`), 1000);
+      }, 2000);
     } catch (err) {
       if (err.response?.data?.errors) {
         setError(err.response.data.errors.join(", "));
       } else {
         setError("An unexpected error occurred.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -294,7 +302,7 @@ const EditProfile = () => {
           <button 
             type="submit" 
             className="Edit-Foodie-submit-btn"
-            disabled={isPhoneChanged && !isPhoneVerified}
+            disabled={isSubmitting || (isPhoneChanged && !isPhoneVerified)}
           >
             Update Profile
           </button>

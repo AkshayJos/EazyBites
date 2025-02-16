@@ -1,85 +1,160 @@
-.food-seller-container {
-    padding: 20px;
-    font-family: Arial, sans-serif;
+.foodSellerDash-container {
+  padding: 2rem;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.foodSellerDash-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.foodSellerDash-header h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.foodSellerDash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.foodSellerDash-tile {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.foodSellerDash-tile:hover {
+  transform: translateY(-5px);
+}
+
+.foodSellerDash-icon {
+  width: 48px;
+  height: 48px;
+  fill: #3498db;
+}
+
+.foodSellerDash-tile span {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.foodSellerDash-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.foodSellerDash-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.foodSellerDash-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.foodSellerDash-modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.foodSellerDash-modal h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.foodSellerDash-modal p {
+  color: #606060;
+  margin-bottom: 1.5rem;
+}
+
+.foodSellerDash-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.foodSellerDash-modal-button-cancel,
+.foodSellerDash-modal-button-confirm {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.foodSellerDash-modal-button-cancel {
+  background-color: #e0e0e0;
+  color: #606060;
+  border: none;
+}
+
+.foodSellerDash-modal-button-confirm {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+}
+
+.foodSellerDash-modal-button-cancel:hover {
+  background-color: #d0d0d0;
+}
+
+.foodSellerDash-modal-button-confirm:hover {
+  background-color: #c0392b;
+}
+
+@media (max-width: 768px) {
+  .foodSellerDash-container {
+      padding: 1rem;
   }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+
+  .foodSellerDash-header h1 {
+      font-size: 2rem;
   }
-  
-  .greeting {
-    font-size: 24px;
-    font-weight: bold;
+
+  .foodSellerDash-grid {
+      gap: 1rem;
   }
-  
-  .username {
-    font-weight: bold;
+
+  .foodSellerDash-tile {
+      padding: 1.5rem;
   }
-  
-  .logout-btn {
-    padding: 5px 10px;
-    border: 1px solid black;
-    background-color: white;
-    cursor: pointer;
-  }
-  
-  .main-content {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-  
-  .stall-info {
-    display: flex;
-    align-items: center;
-  }
-  
-  .stall-pic {
-    width: 150px;
-    height: 100px;
-    border: 1px solid black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 20px;
-    overflow: hidden;
-  }
-  
-  .stall-pic img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .profile-section {
-    text-align: center;
-  }
-  
-  .profile-pic {
-    width: 80px;
-    height: 80px;
-    border: 1px solid black;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-    overflow: hidden;
-  }
-  
-  .profile-pic img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-  
-  .change-btn {
-    padding: 5px 10px;
-    border: 1px solid black;
-    background-color: white;
-    cursor: pointer;
-  }
-  
+}
