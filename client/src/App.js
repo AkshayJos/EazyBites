@@ -8,6 +8,8 @@ import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import FoodSeller from "./pages/FoodSeller/FoodSeller";
+import Foodie from "./pages/Foodie/Foodie";
+import EditProfile from "./pages/Foodie/EditProfile";
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/food-seller" element={<FoodSeller />} />
+          <Route path="/foodie" element={<Foodie />} />
+          <Route path="/foodie-edit-profile" element={<EditProfile />} />
         </Routes>
         <Footer />
       </Router>

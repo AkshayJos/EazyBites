@@ -87,7 +87,9 @@ const Login = () => {
                 }
             } else {
                 // If user does not exist, show signup prompt
-                setSignupUser(user);
+                await user.delete();
+                console.log("Unauthorized login attempt detected. Account deleted.");
+                setSignupUser(null);
                 setShowSignupPrompt(true);
             }
         } catch (error) {

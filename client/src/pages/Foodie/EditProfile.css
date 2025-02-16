@@ -1,0 +1,257 @@
+.Edit-Foodie-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.Edit-Foodie-title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.Edit-Foodie-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.Edit-Foodie-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.Edit-Foodie-form-group label {
+  font-weight: 600;
+  color: #444;
+}
+
+.Edit-Foodie-input,
+.Edit-Foodie-textarea {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.Edit-Foodie-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.Edit-Foodie-submit-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.Edit-Foodie-submit-btn:hover {
+  background-color: #45a049;
+}
+
+.Edit-Foodie-cancel-btn {
+  background-color: #cc0707;
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.Edit-Foodie-cancel-btn:hover {
+  background-color: #8d0a0a;
+}
+
+.Edit-Foodie-buttons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.Edit-Foodie-error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.Edit-Foodie-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.Edit-Foodie-loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.Edit-Foodie-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.Edit-Foodie-photo-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  /* border-radius: 50%; */
+  overflow: hidden;
+  cursor: pointer;
+  /* border: 3px solid #4CAF50; */
+  transition: border-color 0.3s, opacity 0.3s;
+}
+
+.Edit-Foodie-photo-container:hover {
+  opacity: 0.8;
+}
+
+.Edit-Foodie-photo-container.drag-active {
+  border-color: #45a049;
+  opacity: 0.6;
+}
+
+.Edit-Foodie-profile-photo {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #4CAF50;
+}
+
+.Edit-Foodie-drop-zone {
+  width: 100%;
+  max-width: 400px;
+  height: 200px;
+  border: 2px dashed #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+  position: relative;
+}
+
+.Edit-Foodie-drag-active {
+  border-color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.Edit-Foodie-file-input {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.Edit-Foodie-photo-instructions {
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+  margin-top: 0.5rem;
+  border-top: 1px solid #ddd;
+  padding-top: 0.5rem;
+  width: 100%;
+  max-width: 200px;
+}
+
+.Edit-Foodie-file-label {
+  text-align: center;
+  color: #666;
+  padding: 1rem;
+}
+
+.Edit-Foodie-phone-container {
+  width: 100%;
+}
+
+.Edit-Foodie-phone-input {
+  width: 100% !important;
+  padding: 0.75rem !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 1rem !important;
+}
+
+@media (max-width: 600px) {
+  .Edit-Foodie-container {
+    padding: 1rem;
+  }
+
+  .Edit-Foodie-drop-zone {
+    height: 150px;
+  }
+
+  .Edit-Foodie-profile-photo {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* New CSS classes for the enhanced functionality */
+.Edit-Foodie-credential-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.Edit-Foodie-link-btn {
+  padding: 8px 16px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.Edit-Foodie-link-btn:hover {
+  background-color: #357abd;
+}
+
+.Edit-Foodie-link-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Modified phone input styles to work with the new layout */
+.Edit-Foodie-phone-container {
+  flex: 1;
+}
+
+.Edit-Foodie-phone-input {
+  width: 100% !important;
+  padding: 8px 45px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 16px !important;
+}
+
+/* OTP input specific styles */
+.Edit-Foodie-otp-container {
+  margin-top: 15px;
+}

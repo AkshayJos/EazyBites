@@ -104,12 +104,20 @@ const Signup = () => {
                 signupType: signupType,
                 username: username.trim() || user.displayName || "Anonymous User",
                 createdAt: user.metadata.creationTime,
+                changeCounters: {
+                    email: 1,
+                    phoneNumber: 0,
+                },
             }
             : {
                 phoneNumber: user.phoneNumber || "",
                 signupType: signupType,
                 username: username.trim() || "Anonymous User",
                 createdAt: new Date(),
+                changeCounters: {
+                    email: 0,
+                    phoneNumber: 1,
+                },
             };
         await setDoc(doc(db, "users", user.uid), userDoc);
         navigate(signupType === "Foodie" ? "/foodie" : "/food-seller");

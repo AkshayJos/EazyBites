@@ -1,5 +1,3 @@
-/* signup.css */
-
 .signup-container {
   max-width: 480px;
   margin: 2rem auto;
@@ -100,7 +98,6 @@
   width: 30px;
   height: 30px;
 }
-
 
 .signup-phone-container {
   margin-bottom: 1.5rem;

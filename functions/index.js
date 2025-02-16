@@ -1,19 +1,24 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
+/* eslint-disable max-len */
+const {initializeApp} = require("firebase-admin/app");
 const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+const express = require("express");
+const cors = require("cors");
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+initializeApp();
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// Initialize Express app
+const app = express();
+
+// Middleware
+app.use(cors({origin: true}));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+// import routes
+const userRoutes = require("./routes/users");
+
+// Use routes
+app.use("/users", userRoutes);
+
+// Export API
+exports.api = onRequest(app);
