@@ -7,7 +7,8 @@
     "server": "cd functions && npm run serve",
     "client": "cd client && npm start",
     "deploy": "npm run build-client && firebase deploy",
-    "build-client": "cd client && npm run build"
+    "build-client": "cd client && npm run build",
+    "install-all": "npm install && concurrently \"cd functions && npm install\" \"cd client && npm install\""
   },
   "author": "",
   "license": "ISC",

@@ -11,6 +11,7 @@ import FoodSeller from "./pages/FoodSeller/FoodSeller";
 import Foodie from "./pages/Foodie/Foodie";
 import EditProfileFoodie from "./pages/Foodie/EditProfile";
 import EditProfileSeller from "./pages/FoodSeller/EditProfile";
+import MyMenu from "./pages/FoodSeller/MyMenu";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/foodie" element={<Foodie />} />
           <Route path="/foodie-edit-profile" element={<EditProfileFoodie />} />
           <Route path="/seller-edit-profile" element={<EditProfileSeller />} />
+          <Route path="/seller-menu" element={<MyMenu />} />
         </Routes>
         <Footer />
       </Router>

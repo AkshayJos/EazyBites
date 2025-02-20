@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig"; // Adjust import based on your project structure
+import { db } from "../../firebaseConfig";
 import "./Navbar.css";
 import { useScrollNavigation } from '../../hooks/useScrollNavigation';
 
@@ -15,7 +15,7 @@ const Navbar = () => {
   const [signupType, setSignupType] = useState(null);
   const [photoURL, setPhotoURL] = useState("");
 
-  const dummyPhoto = "images/dummy-user-image.jpg"; // Replace with actual dummy image path
+  const dummyPhoto = "images/dummy-user-image.jpg";
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {

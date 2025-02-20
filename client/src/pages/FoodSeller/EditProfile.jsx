@@ -7,6 +7,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage, auth } from '../../firebaseConfig';
 import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider } from 'firebase/auth';
 import './EditProfile.css';
+import Loader from "../../components/Loader/Loader";
 
 const API = process.env.REACT_APP_API;
 const MAX_STALL_PHOTOS = 5;
@@ -268,14 +269,7 @@ const EditProfile = () => {
 
     if (loading) {
         return (
-            <div className="Edit-FoodSeller-loading">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="Edit-FoodSeller-spinner"
-                />
-                Loading...
-            </div>
+            <Loader />
         );
     }
 

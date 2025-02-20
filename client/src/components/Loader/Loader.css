@@ -1,0 +1,23 @@
+.MyMenu-spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    position: relative;
+}
+
+.MyMenu-spinner-dot {
+    width: 30px;
+    height: 30px;
+    background: #4299e1;
+    position: absolute;
+}
+
+.MyMenu-spinner-ring {
+    width: 50px;
+    height: 50px;
+    border: 4px solid transparent;
+    border-top: 4px solid #4299e1;
+    border-right: 4px solid #4299e1;
+    border-radius: 50%;
+}

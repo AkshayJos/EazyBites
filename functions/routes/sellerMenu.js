@@ -5,6 +5,7 @@ const express = require("express");
 const router = express.Router();
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 const db = getFirestore();
+const {getStorage} = require("firebase-admin/storage");
 
 // Fetches paginated menu items for a specific seller
 router.get("/:uid", async (req, res) => {
@@ -170,6 +171,57 @@ router.put("/:uid/update/:fid", async (req, res) => {
     res.json({message: "Food item updated successfully"});
   } catch (error) {
     res.status(500).json({error: "Failed to update food item"});
+  }
+});
+
+// Deletes a food item along with its images from storage
+router.delete("/:uid/item/:fid", async (req, res) => {
+  try {
+    const {uid, fid} = req.params;
+
+    // Verify the item belongs to the seller
+    const menuItemRef = await db.collection("users")
+        .doc(uid)
+        .collection("myMenu")
+        .where("foodItemId", "==", fid)
+        .get();
+
+    if (menuItemRef.empty) {
+      return res.status(404).json({error: "Item not found in seller's menu"});
+    }
+
+    // Fetch the food item details
+    const foodItemDoc = await db.collection("foodItems").doc(fid).get();
+    if (!foodItemDoc.exists) {
+      return res.status(404).json({error: "Food item not found"});
+    }
+
+    const foodItemData = foodItemDoc.data();
+
+    // Delete images from Firebase Storage
+    if (foodItemData.photoURLs && Array.isArray(foodItemData.photoURLs)) {
+      const storage = getStorage();
+      const bucket = storage.bucket();
+
+      await Promise.all(
+          foodItemData.photoURLs.map(async (photoURL) => {
+            const filePath = decodeURIComponent(photoURL.split("/o/")[1].split("?")[0]); // Extract path
+            await bucket.file(filePath).delete();
+          }),
+      );
+    }
+
+    // Delete food item document
+    await db.collection("foodItems").doc(fid).delete();
+
+    // Delete the menu reference from seller's `myMenu`
+    const batch = db.batch();
+    menuItemRef.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+
+    res.json({message: "Food item deleted successfully"});
+  } catch (error) {
+    res.status(500).json({error: "Failed to delete food item"});
   }
 });
 
