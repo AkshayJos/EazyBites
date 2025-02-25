@@ -5,6 +5,7 @@ import axios from 'axios';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage, auth } from '../../firebaseConfig';
 import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider } from 'firebase/auth';
+import Loader from '../../components/Loader/Loader';
 import './EditProfile.css';
 
 const API = process.env.REACT_APP_API;
@@ -190,7 +191,11 @@ const EditProfile = () => {
     }
   };
 
-  if (loading) return <div className="Edit-Foodie-loading">Loading...</div>;
+  if (loading) {
+    return (
+      <Loader />
+    );
+  }
 
   return (
     <div className="Edit-Foodie-container">

@@ -21,22 +21,29 @@ const Navbar = () => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        setPhotoURL(currentUser.photoURL || dummyPhoto);
+  
+        // Fetch extra user details from Firestore
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setSignupType(userData.signupType);
-          setPhotoURL(userData.photoURL || dummyPhoto);
+  
+          // Force a state update to trigger re-render of profile pic
+          setTimeout(() => {
+            setPhotoURL(userData.photoURL || dummyPhoto);
+          }, 100); 
         }
       } else {
         setUser(null);
         setSignupType(null);
-        setPhotoURL("");
+        setPhotoURL(dummyPhoto);
       }
     });
-
+  
     return () => unsubscribe();
   }, [auth]);
+  
 
   const handleLogoClick = () => {
     if (!user) {
@@ -62,7 +69,7 @@ const Navbar = () => {
         {user ? (
           <>
             <button className="nav-dashboard" onClick={() => navigate(signupType === "Foodie" ? "/foodie" : "/food-seller")}>
-              <img src={photoURL} alt="User" className="nav-profile-pic" />
+              <img src={photoURL} alt="User" className="nav-profile-pic" referrerPolicy="no-referrer" />
             </button>
             <button
               className="nav-button"

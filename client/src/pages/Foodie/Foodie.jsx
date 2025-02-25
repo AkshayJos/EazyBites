@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
+import Loader from '../../components/Loader/Loader';
 import './Foodie.css';
 
 const Foodie = () => {
@@ -134,9 +135,7 @@ const Foodie = () => {
 
     if (loading) {
         return (
-            <div className="foodieDash-loading">
-                <div className="foodieDash-spinner"></div>
-            </div>
+            <Loader />
         );
     }
 
