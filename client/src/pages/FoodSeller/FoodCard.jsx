@@ -14,7 +14,7 @@ const FoodCard = ({ item, onEdit, onDelete }) => {
             <div className="MyMenu-card-content">
                 <div className="MyMenu-card-header">
                     <h3>{item.name}</h3>
-                    <p className="MyMenu-price">${item.price}</p>
+                    <p className="MyMenu-price">₹{item.price}</p>
                 </div>
                 <div className="MyMenu-rating">
                     Rating: {item.rating}/5
