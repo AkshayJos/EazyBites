@@ -274,17 +274,6 @@ const Signup = () => {
                         </label>
                     </div>
 
-                    <div className="terms-container">
-                        <label className="terms-label">
-                            <input
-                                type="checkbox"
-                                checked={acceptedTerms}
-                                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                disabled={isVerifying}
-                            />
-                            I accept the Terms and Conditions
-                        </label>
-                    </div>
 
                     {!isVerifying && (
                         <>
@@ -320,6 +309,17 @@ const Signup = () => {
                             </button>
                         </>
                     )}
+                    <div className="terms-container">
+                        <label className="terms-label">
+                            <input
+                                type="checkbox"
+                                checked={acceptedTerms}
+                                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                disabled={isVerifying}
+                            />
+                            I accept the Terms and Conditions
+                        </label>
+                    </div>
 
                     {isVerifying && (
                         <div className="signup-otp-container">
