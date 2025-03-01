@@ -1,0 +1,137 @@
+.TC-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .TC-content {
+    width: 100%;
+    max-width: 800px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .TC-heading {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 28px;
+  }
+  
+  .TC-terms-box {
+    height: 350px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    background: #fff;
+    transition: all 0.3s ease;
+  }
+  
+  .TC-terms-box::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .TC-terms-box::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+  }
+  
+  .TC-terms-box::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 8px;
+  }
+  
+  .TC-terms-box::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+  }
+  
+  .TC-paragraph {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 15px;
+  }
+  
+  .TC-subheading {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .TC-button {
+    display: block;
+    padding: 12px 24px;
+    border: none;
+    background: #4361ee;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+  }
+  
+  .TC-button:hover {
+    background: #3a56d4;
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+  }
+  
+  .TC-button:focus {
+    outline: none;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .TC-content {
+      padding: 20px;
+    }
+    
+    .TC-heading {
+      font-size: 24px;
+    }
+    
+    .TC-terms-box {
+      height: 300px;
+      padding: 15px;
+    }
+    
+    .TC-subheading {
+      font-size: 16px;
+    }
+    
+    .TC-paragraph {
+      font-size: 14px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .TC-content {
+      padding: 15px;
+    }
+    
+    .TC-heading {
+      font-size: 20px;
+    }
+    
+    .TC-terms-box {
+      height: 250px;
+      padding: 12px;
+    }
+    
+    .TC-button {
+      padding: 10px 20px;
+      font-size: 14px;
+      width: 100%;
+    }
+  }
