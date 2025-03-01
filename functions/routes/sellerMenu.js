@@ -109,6 +109,7 @@ router.post("/:uid/add", async (req, res) => {
     // Create new food item
     const foodItemRef = db.collection("foodItems").doc();
     const foodItem = {
+      uid,
       name,
       description: description || "",
       price,

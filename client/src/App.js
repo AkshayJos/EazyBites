@@ -13,6 +13,7 @@ import EditProfileFoodie from "./pages/Foodie/EditProfile";
 import EditProfileSeller from "./pages/FoodSeller/EditProfile";
 import MyMenu from "./pages/FoodSeller/MyMenu";
 import MyStall from "./pages/FoodSeller/MyStall";
+import Menu from "./pages/Foodie/Menu";
 
 function App() {
   return (
@@ -26,9 +27,11 @@ function App() {
           <Route path="/food-seller" element={<FoodSeller />} />
           <Route path="/foodie" element={<Foodie />} />
           <Route path="/foodie-edit-profile" element={<EditProfileFoodie />} />
+          <Route path="/menu" element={<Menu />} />
           <Route path="/seller-edit-profile" element={<EditProfileSeller />} />
           <Route path="/seller-menu" element={<MyMenu />} />
           <Route path="/my-store" element={<MyStall />} />
+
         </Routes>
         <Footer />
       </Router>
