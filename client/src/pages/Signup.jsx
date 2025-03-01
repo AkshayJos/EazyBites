@@ -12,7 +12,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import "./Signup.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const setupRecaptcha = () => {
     if (!window.recaptchaVerifier) {
@@ -317,7 +317,10 @@ const Signup = () => {
                                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                                 disabled={isVerifying}
                             />
-                            I accept the Terms and Conditions
+                            I accept the{" "}
+                    <Link to="/terms-and-conditions" className="terms-link">
+                        Terms and Conditions
+                    </Link>
                         </label>
                     </div>
 
