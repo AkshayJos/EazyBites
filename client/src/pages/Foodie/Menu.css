@@ -1,0 +1,66 @@
+/* Container */
+.Menu-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  /* Heading */
+  .Menu-heading {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* Grid Layout */
+  .Menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    justify-content: center;
+  }
+  
+  /* Card */
+  .Menu-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  
+  /* Card Title */
+  .Menu-card-title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  /* Card Price */
+  .Menu-card-price {
+    font-size: 16px;
+    color: #4caf50;
+    margin-top: 5px;
+  }
+  
+  /* No Items Message */
+  .Menu-no-items {
+    font-size: 16px;
+    color: #888;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 480px) {
+    .Menu-container {
+      padding: 15px;
+    }
+  
+    .Menu-heading {
+      font-size: 22px;
+    }
+  
+    .Menu-grid {
+      grid-template-columns: repeat(2, 1fr); /* Ensures at least 2 items per row on mobile */
+    }
+  }
+  

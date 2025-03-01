@@ -1,26 +1,38 @@
-.MyMenu-spinner-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-    position: relative;
+/* Portal Loader CSS */
+.spinner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  background-color: rgba(255, 255, 255, 0.8);
+  /* Ensure this doesn't affect other elements */
+  pointer-events: none; /* Optional: allows clicking through if needed */
 }
 
-.MyMenu-spinner-dot {
-    width: 25px;
-    height: 25px;
-    background: #d66c1b;
-    position: absolute;
+/* Make the spinner elements receive pointer events if you want them clickable */
+.spinner-dot, .spinner-ring {
+  pointer-events: auto;
 }
 
-.MyMenu-spinner-ring {
-    width: 50px;
-    height: 50px;
-    border: 4px solid transparent;
+.spinner-dot {
+  width: 25px;
+  height: 25px;
+  background: #d66c1b;
+  position: absolute;
+}
 
-    border-top: 2px solid #d25c03;
-    border-right: 3px solid #d25c03;
-    border-bottom: 0px solid #d25c03;
-    border-left: 1px double #d25c03;
-    border-radius: 50%;
+.spinner-ring {
+  width: 50px;
+  height: 50px;
+  border: 4px solid transparent;
+  border-top: 2px solid #d25c03;
+  border-right: 3px solid #d25c03;
+  border-bottom: 0px solid #d25c03;
+  border-left: 1px double #d25c03;
+  border-radius: 50%;
 }
