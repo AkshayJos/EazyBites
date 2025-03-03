@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PhoneInput from 'react-phone-input-2';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage, auth } from '../../firebaseConfig';
-import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider } from 'firebase/auth';
+import { storage, auth, db } from '../../firebaseConfig';
+import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import './EditProfile.css';
 import Loader from "../../components/Loader/Loader";
+import UnauthorizedPage from '../Unauthorized/Unauthorized';
 
 const API = process.env.REACT_APP_API;
 const MAX_STALL_PHOTOS = 5;
@@ -15,8 +17,6 @@ const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
 
 const EditProfile = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const uid = searchParams.get("uid");
 
     const [formData, setFormData] = useState({
         username: '',
@@ -30,6 +30,7 @@ const EditProfile = () => {
     });
 
     const [loading, setLoading] = useState(true);
+    const [authLoading, setAuthLoading] = useState(true);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,10 +44,102 @@ const EditProfile = () => {
     const [isPhoneChanged, setIsPhoneChanged] = useState(false);
     const [changeCounters, setChangeCounters] = useState({ email: 0, phoneNumber: 0 });
     const [uploadProgress, setUploadProgress] = useState({});
+    const [authState, setAuthState] = useState({
+        isAuthenticated: false,
+        isAuthorized: false,
+        authError: null,
+        userData: null
+    });
 
     useEffect(() => {
-        fetchUserData();
-    }, [uid]);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                // User is not logged in
+                setAuthState({
+                    isAuthenticated: false,
+                    isAuthorized: false,
+                    authError: {
+                        title: "Authentication Required",
+                        message: "Please login to access this page.",
+                        returnPath: "/login",
+                        returnText: "Go to Login"
+                    },
+                    userData: null
+                });
+                setAuthLoading(false);
+                return;
+            }
+
+            try {
+                // User is logged in, fetch user data from Firestore
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const userData = userDoc.data();
+
+                if (!userData) {
+                    setAuthState({
+                        isAuthenticated: true,
+                        isAuthorized: false,
+                        authError: {
+                            title: "User Profile Not Found",
+                            message: "Your user profile could not be found.",
+                            returnPath: "/",
+                            returnText: "Go to Home"
+                        },
+                        userData: null
+                    });
+                    setAuthLoading(false);
+                    return;
+                }
+
+                // Check if user is a Food Seller
+                if (userData.signupType !== "Food Seller") {
+                    setAuthState({
+                        isAuthenticated: true,
+                        isAuthorized: false,
+                        authError: {
+                            title: "Not Authorized",
+                            message: "This page is only accessible to Food Sellers.",
+                            returnPath: userData.signupType === "Foodie" ? "/foodie-edit-profile" : "/",
+                            returnText: userData.signupType === "Foodie" ? "Go to Foodie Profile" : "Go to Home"
+                        },
+                        userData
+                    });
+                    setAuthLoading(false);
+                    return;
+                }
+
+                // User is authenticated and authorized
+                setAuthState({
+                    isAuthenticated: true,
+                    isAuthorized: true,
+                    authError: null,
+                    userData
+                });
+                setAuthLoading(false);
+
+                // Fetch detailed user data for the form
+                fetchUserData(user.uid);
+
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                setAuthState({
+                    isAuthenticated: true,
+                    isAuthorized: false,
+                    authError: {
+                        title: "Error",
+                        message: "An error occurred while verifying your access. Please try again.",
+                        returnPath: "/",
+                        returnText: "Go to Home"
+                    },
+                    userData: null
+                });
+                setAuthLoading(false);
+            }
+        });
+
+        // Cleanup subscription
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         let interval;
@@ -58,7 +151,7 @@ const EditProfile = () => {
         return () => clearInterval(interval);
     }, [timer]);
 
-    const fetchUserData = async () => {
+    const fetchUserData = async (uid) => {
         try {
             const response = await axios.get(`${API}/users/${uid}`);
             const userData = {
@@ -116,6 +209,7 @@ const EditProfile = () => {
         if (!file || !validateFile(file)) return;
 
         try {
+            const uid = auth.currentUser.uid;
             const storageRef = ref(storage, `seller-profiles/${uid}/${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -148,6 +242,7 @@ const EditProfile = () => {
             if (!validateFile(file)) continue;
 
             try {
+                const uid = auth.currentUser.uid;
                 const storageRef = ref(storage, `stall-photos/${uid}/${file.name}`);
                 const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -252,6 +347,7 @@ const EditProfile = () => {
         setIsSubmitting(true);
 
         try {
+            const uid = auth.currentUser.uid;
             await axios.patch(`${API}/users/${uid}`, formData);
             setSuccessMessage('Profile updated successfully!');
             setTimeout(() => {
@@ -264,13 +360,27 @@ const EditProfile = () => {
             } else {
                 setError("An unexpected error occurred.");
             }
+            setIsSubmitting(false);
         }
     };
 
-    if (loading) {
+    if (authLoading) {
+        return <Loader />;
+    }
+
+    if (!authState.isAuthenticated || !authState.isAuthorized) {
         return (
-            <Loader />
+            <UnauthorizedPage
+                title={authState.authError.title}
+                message={authState.authError.message}
+                returnPath={authState.authError.returnPath}
+                returnText={authState.authError.returnText}
+            />
         );
+    }
+
+    if (loading) {
+        return <Loader />;
     }
 
     return (

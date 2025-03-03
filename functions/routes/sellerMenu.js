@@ -61,7 +61,7 @@ router.get("/:uid", async (req, res) => {
   }
 });
 
-// Fetches details of a single food item
+// Fetches details of a single food item (seller's view)
 router.get("/:uid/item/:fid", async (req, res) => {
   try {
     const {uid, fid} = req.params;
@@ -102,14 +102,31 @@ router.post("/:uid/add", async (req, res) => {
     const {name, description, price, photoURLs} = req.body;
 
     // Validate required fields
-    if (!name || !price || !photoURLs || !Array.isArray(photoURLs) || photoURLs.length === 0) {
+    if (!uid || !name || !price || !photoURLs || !Array.isArray(photoURLs) || photoURLs.length === 0) {
       return res.status(400).json({error: "Missing required fields"});
+    }
+
+    // Check if user exists and has set their stallName
+    const userDoc = await db.collection("users").doc(uid).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({error: "User not found"});
+    }
+
+    const userData = userDoc.data();
+
+    // Check if stallName exists and is not empty
+    if (!userData.stallName || userData.stallName.trim() === "") {
+      return res.status(400).json({
+        error: "Please set your stall name before adding food items",
+        code: "STALL_NAME_REQUIRED",
+      });
     }
 
     // Create new food item
     const foodItemRef = db.collection("foodItems").doc();
     const foodItem = {
-      uid,
+      seller: uid,
       name,
       description: description || "",
       price,
@@ -135,6 +152,7 @@ router.post("/:uid/add", async (req, res) => {
       ...foodItem,
     });
   } catch (error) {
+    console.error("Error creating food item:", error);
     res.status(500).json({error: "Failed to create food item"});
   }
 });

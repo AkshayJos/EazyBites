@@ -11,15 +11,30 @@ const MyStall = () => {
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [userType, setUserType] = useState(null);
-  const [error, setError] = useState(null);
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    isAuthorized: false,
+    authError: null,
+    userData: null
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     const unsubAuth = auth.onAuthStateChanged(async (currentUser) => {
       if (!currentUser) {
-        // User not logged in, redirect to login
-        navigate("/login");
+        // User not logged in, set auth state accordingly
+        setAuthState({
+          isAuthenticated: false,
+          isAuthorized: false,
+          authError: {
+            title: "Authentication Required",
+            message: "Please login to access this page.",
+            returnPath: "/login",
+            returnText: "Go to Login"
+          },
+          userData: null
+        });
+        setLoading(false);
         return;
       }
 
@@ -30,17 +45,67 @@ const MyStall = () => {
         const userDocRef = doc(db, "users", currentUser.uid);
         const userDoc = await getDoc(userDocRef);
         
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.signupType) {
-            setUserType(userData.signupType);
-          } else {
-            setError("User type not found in your profile. Please contact support.");
-          }
-        } else {
-          setError("User profile not found. Please complete registration.");
+        if (!userDoc.exists()) {
+          setAuthState({
+            isAuthenticated: true,
+            isAuthorized: false,
+            authError: {
+              title: "User Profile Not Found",
+              message: "Your user profile could not be found.",
+              returnPath: "/",
+              returnText: "Go to Home"
+            },
+            userData: null
+          });
+          setLoading(false);
+          return;
         }
         
+        const userData = userDoc.data();
+        
+        // Check if user is a Food Seller
+        if (userData.signupType !== "Food Seller") {
+          setAuthState({
+            isAuthenticated: true,
+            isAuthorized: false,
+            authError: {
+              title: "Not Authorized",
+              message: `This page is only accessible to Food Sellers. Your account type is ${userData.signupType}.`,
+              returnPath: userData.signupType === "Foodie" ? "/foodie" : "/",
+              returnText: userData.signupType === "Foodie" ? "Go to Foodie Dashboard" : "Go to Home"
+            },
+            userData
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Check if seller has set phoneNumber
+        if (!userData.phoneNumber) {
+          setAuthState({
+            isAuthenticated: true,
+            isAuthorized: false,
+            authError: {
+              title: "Profile Incomplete",
+              message: "Please set your phone number before accessing this page.",
+              returnPath: "/seller-edit-profile",
+              returnText: "Complete Your Profile"
+            },
+            userData
+          });
+          setLoading(false);
+          return;
+        }
+
+        // User is authenticated and authorized
+        setAuthState({
+          isAuthenticated: true,
+          isAuthorized: true,
+          authError: null,
+          userData
+        });
+        
+        // Fetch stall status
         const storeRef = ref(database, `stallStatus/${currentUser.uid}`);
         const statusListener = onValue(storeRef, (snapshot) => {
           setIsLive(snapshot.val() || false);
@@ -53,7 +118,17 @@ const MyStall = () => {
         };
       } catch (error) {
         console.error("Error fetching user data:", error);
-        setError("Error loading user data: " + error.message);
+        setAuthState({
+          isAuthenticated: true,
+          isAuthorized: false,
+          authError: {
+            title: "Error",
+            message: "An error occurred while verifying your access. Please try again.",
+            returnPath: "/",
+            returnText: "Go to Home"
+          },
+          userData: null
+        });
         setLoading(false);
       }
     });
@@ -82,50 +157,14 @@ const MyStall = () => {
     return <Loader />;
   }
 
-  if (error) {
-    return (
-      <div className="MyStall-error">
-        <h2>Something went wrong</h2>
-        <p>{error}</p>
-        <button 
-          className="MyStall-button" 
-          onClick={() => navigate("/")}
-        >
-          Go to Home
-        </button>
-      </div>
-    );
-  }
-
-  // Handle case where userType might be null
-  if (userType === null) {
-    return (
-      <div className="MyStall-missing-data">
-        <h2>Missing Profile Information</h2>
-        <p>We couldn't determine your account type. You may need to complete your profile setup.</p>
-        <div className="MyStall-debug-info">
-          <p><strong>Debug Info:</strong></p>
-          <p>User ID: {user?.uid || "Not available"}</p>
-          <p>Email: {user?.email || "Not available"}</p>
-        </div>
-        <button 
-          className="MyStall-button" 
-          onClick={() => navigate("/profile/complete")}
-        >
-          Complete Profile
-        </button>
-      </div>
-    );
-  }
-
-  // If user is not a food seller, show unauthorized page
-  if (userType !== "Food Seller") {
+  // Handle cases where user is not authenticated or authorized
+  if (!authState.isAuthenticated || !authState.isAuthorized) {
     return (
       <UnauthorizedPage 
-        title="Seller Access Only"
-        message={`Your account type (${userType}) doesn't have permission to manage a stall. Only Food Sellers can access this page.`}
-        returnPath="/foodie"
-        returnText="Back to Homepage"
+        title={authState.authError.title}
+        message={authState.authError.message}
+        returnPath={authState.authError.returnPath}
+        returnText={authState.authError.returnText}
       />
     );
   }

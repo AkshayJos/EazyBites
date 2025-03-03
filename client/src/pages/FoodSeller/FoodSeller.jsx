@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebaseConfig';
+import { ref, set } from 'firebase/database';
+import { auth, db, database } from '../../firebaseConfig';
 import Loader from '../../components/Loader/Loader';
 import './FoodSeller.css';
 
@@ -58,8 +59,23 @@ const FoodSeller = () => {
         return () => unsubscribe();
     }, [navigate]);
 
+    const updateStallStatus = async (uid, status) => {
+        try {
+            const stallStatusRef = ref(database, `stallStatus/${uid}`);
+            await set(stallStatusRef, status);
+            console.log(`Stall status updated to ${status}`);
+        } catch (error) {
+            console.error("Error updating stall status:", error);
+        }
+    };
+
     const handleLogout = async () => {
         try {
+            if (user && user.uid) {
+                // Update stall status to false in real-time database
+                await updateStallStatus(user.uid, false);
+            }
+            
             await signOut(auth);
             navigate('/');
         } catch (error) {
@@ -168,7 +184,7 @@ const FoodSeller = () => {
                     whileHover="hover"
                     onClick={() => {
                         if (auth.currentUser) {
-                            navigate(`/seller-edit-profile?uid=${auth.currentUser.uid}`);
+                            navigate(`/seller-edit-profile`);
                         }
                     }}
                 >
@@ -196,7 +212,7 @@ const FoodSeller = () => {
                     whileHover="hover"
                     onClick={() => {
                         if (auth.currentUser) {
-                            navigate(`/seller-menu?uid=${auth.currentUser.uid}`);
+                            navigate(`/seller-menu`);
                         }
                     }}
                 >

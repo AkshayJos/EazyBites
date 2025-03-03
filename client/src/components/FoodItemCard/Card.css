@@ -1,124 +1,159 @@
 .Card-container {
-    display: flex;
-    flex-direction: column;
-    width: 300px;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #ffffff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .Card-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  .Card-loading, 
-  .Card-error {
-    height: 300px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 16px;
-    color: #666666;
-  }
-  
-  .Card-error {
-    color: #e53935;
-  }
-  
-  .Card-image-container {
-    height: 180px;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .Card-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  
-  .Card-image-hover {
-    z-index: 1;
-  }
-  
-  .Card-content {
-    padding: 16px;
-  }
-  
-  .Card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  
-  .Card-name {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333333;
-  }
-  
-  .Card-rating {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: 500;
-    color: #333333;
-  }
-  
-  .Card-stall {
-    font-size: 14px;
-    color: #666666;
-    margin-bottom: 8px;
-  }
-  
-  .Card-stall p {
-    margin: 0;
-  }
-  
-  .Card-description {
-    font-size: 14px;
-    line-height: 1.4;
-    color: #555555;
-    margin-bottom: 16px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .Card-price-order {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .Card-price {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333333;
-    margin: 0;
-  }
-  
-  .Card-order-button {
-    background-color: #ff6b6b;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .Card-order-button:hover {
-    background-color: #ff5252;
-  }
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.Card-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.Card-loading, 
+.Card-error {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #666666;
+}
+
+.Card-error {
+  color: #e53935;
+}
+
+.Card-image-container {
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+.Card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.Card-image-hover {
+  z-index: 1;
+}
+
+.Card-content {
+  padding: 16px;
+}
+
+.Card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.Card-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.Card-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  color: #333333;
+}
+
+.Card-stall {
+  font-size: 14px;
+  color: #666666;
+  margin-bottom: 8px;
+}
+
+.Card-stall p {
+  margin: 0;
+}
+
+.Card-description {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #555555;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Card-price-order {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.Card-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333333;
+  margin: 0;
+}
+
+.Card-order-button {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.Card-order-button:hover {
+  background-color: #ff5252;
+}
+
+/* Add this to your existing Card.css file */
+
+.Card-loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 8px;
+  padding: 20px;
+}
+
+.Card-loader-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ff6b6b;
+  display: inline-block;
+}
+
+/* Make sure these existing classes have appropriate styling */
+.Card-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  min-height: 150px;
+  position: relative;
+}
+
+.Card-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

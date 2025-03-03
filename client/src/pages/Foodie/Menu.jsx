@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ref, onValue, off } from "firebase/database";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { database, db } from "../../firebaseConfig";
+import Card from "../../components/FoodItemCard/Card";
 import "./Menu.css";
 
 const Menu = () => {
@@ -55,15 +56,9 @@ const Menu = () => {
       <h1 className="Menu-heading">What's Craving?</h1>
       <div className="Menu-grid">
         {foodItems.length > 0 ? (
-          foodItems.map((item) => (
-            <div key={item.id} className="Menu-card">
-              <p className="Menu-card-title">{item.name}</p>
-              <p className="Menu-card-price">${item.price}</p>
-            </div>
-            
-          ))
+          foodItems.map((item) => <Card key={item.id} fid={item.id} />)
         ) : (
-          <p className="Menu-no-items">No food items available.</p>
+          <p className="Menu-no-items">Stalls are closed currently.</p>
         )}
       </div>
     </div>
@@ -71,8 +66,3 @@ const Menu = () => {
 };
 
 export default Menu;
-// {/* <div className="food-grid">
-//   {foodItems.map(item => (
-//     <Card key={item.fid} uid={item.stallId} fid={item.id} />
-//   ))}
-// </div> */}
