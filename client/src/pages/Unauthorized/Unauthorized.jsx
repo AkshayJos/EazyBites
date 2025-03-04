@@ -2,14 +2,14 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Unauthorized.css";
 
-const UnauthorizedPage = ({ 
-  title = "Not Authorized", 
-  message = "You don't have permission to access this page.", 
+const UnauthorizedPage = ({
+  title = "Not Authorized",
+  message = "You don't have permission to access this page.",
   returnPath = "/",
   returnText = "Go to Home"
 }) => {
   const navigate = useNavigate();
-  
+
   return (
     <div className="unauthorized-container">
       <div className="unauthorized-icon">
@@ -21,8 +21,8 @@ const UnauthorizedPage = ({
       </div>
       <h1 className="unauthorized-title">{title}</h1>
       <p className="unauthorized-message">{message}</p>
-      <button 
-        className="unauthorized-button" 
+      <button
+        className="unauthorized-button"
         onClick={() => navigate(returnPath)}
       >
         {returnText}

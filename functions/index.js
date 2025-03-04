@@ -17,10 +17,12 @@ app.use(express.urlencoded({extended: true}));
 // import routes
 const userRoutes = require("./routes/users");
 const sellerMenuRoutes = require("./routes/sellerMenu");
+const foodRoutes = require("./routes/food");
 
 // Use routes
 app.use("/users", userRoutes);
 app.use("/seller", sellerMenuRoutes);
+app.use("/food", foodRoutes);
 
 // Export API
 exports.api = onRequest(app);

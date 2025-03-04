@@ -16,7 +16,7 @@ const Card = ({ fid }) => {
     const fetchItemData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${API}/foodItems/${fid}`);
+        const response = await axios.get(`${API}/food/foodItem/${fid}`);
         setItemData(response.data);
         setError(null);
       } catch (error) {
@@ -115,7 +115,7 @@ const Card = ({ fid }) => {
         </div>
         <p className="Card-description">{description}</p>
         <div className="Card-price-order">
-          <p className="Card-price">${price.toFixed(2)}</p>
+          <p className="Card-price">₹{parseFloat(price).toFixed(2)}</p>
           <motion.button 
             className="Card-order-button"
             whileHover={{ scale: 1.05 }}
