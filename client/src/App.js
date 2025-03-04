@@ -31,7 +31,7 @@ function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/seller-edit-profile" element={<EditProfileSeller />} />
           <Route path="/seller-menu" element={<MyMenu />} />
-          <Route path="/my-store" element={<MyStall />} />
+          <Route path="/my-stall" element={<MyStall />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         </Routes>
         <Footer />
