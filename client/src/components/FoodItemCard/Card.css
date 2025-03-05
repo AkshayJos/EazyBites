@@ -77,6 +77,8 @@
   font-size: 14px;
   color: #666666;
   margin-bottom: 8px;
+  justify-content: left;
+  text-align: left;
 }
 
 .Card-stall p {

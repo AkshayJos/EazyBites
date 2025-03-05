@@ -107,11 +107,11 @@ const Card = ({ fid }) => {
             {name}
           </motion.h3>
           <div className="Card-rating">
-            <span>{roundedRating}</span>
+            <span>Rating: {roundedRating}</span>
           </div>
         </div>
         <div className="Card-stall">
-          <p>{stallName}</p>
+          <p>Stall: {stallName}</p>
         </div>
         <p className="Card-description">{description}</p>
         <div className="Card-price-order">
