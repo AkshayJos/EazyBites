@@ -99,8 +99,14 @@ router.get("/foodItem/:fid", async (req, res) => {
     // Add stallName to food item data
     const responseData = {
       ...foodItemData,
-      id: fid,
+      landmark: sellerData.landMark || "Unknown Landmark",
+      stallOwner: sellerData.username || "Unknown Seller",
+      stallPhoneNumber: sellerData.phoneNumber || "Unknown Phone Number",
+      sellerEmail: sellerData.email,
+      stallDescription: sellerData.stallDescription,
       stallName: sellerData.stallName || "Unknown Stall",
+      stallPhotos: sellerData.stallPhotos || [],
+      id: fid,
     };
 
     res.status(200).json(responseData);

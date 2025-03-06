@@ -7,6 +7,8 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: #ffffff;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 150px;
+  position: relative;
 }
 
 .Card-container:hover {
@@ -125,8 +127,6 @@
   background-color: #ff5252;
 }
 
-/* Add this to your existing Card.css file */
-
 .Card-loader-container {
   display: flex;
   justify-content: center;
@@ -144,15 +144,6 @@
   display: inline-block;
 }
 
-/* Make sure these existing classes have appropriate styling */
-.Card-container {
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  min-height: 150px;
-  position: relative;
-}
 
 .Card-loading {
   display: flex;

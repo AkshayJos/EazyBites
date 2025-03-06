@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PhoneInput from 'react-phone-input-2';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage, auth } from '../../firebaseConfig';
-import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider } from 'firebase/auth';
+import { storage, auth, db } from '../../firebaseConfig';
+import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import Loader from '../../components/Loader/Loader';
+import UnauthorizedPage from '../Unauthorized/Unauthorized';
 import './EditProfile.css';
 
 const API = process.env.REACT_APP_API;
 
 const EditProfile = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const uid = searchParams.get("uid");
 
   const [formData, setFormData] = useState({
     username: '',
@@ -23,6 +24,7 @@ const EditProfile = () => {
   });
   
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,10 +37,103 @@ const EditProfile = () => {
   const [originalPhone, setOriginalPhone] = useState('');
   const [isPhoneChanged, setIsPhoneChanged] = useState(false);
   const [changeCounters, setChangeCounters] = useState({ email: 0, phoneNumber: 0 });
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    isAuthorized: false,
+    authError: null,
+    userData: null
+  });
 
   useEffect(() => {
-    fetchUserData();
-  }, [uid]);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // User is not logged in
+        setAuthState({
+          isAuthenticated: false,
+          isAuthorized: false,
+          authError: {
+            title: "Authentication Required",
+            message: "Please login to access this page.",
+            returnPath: "/login",
+            returnText: "Go to Login"
+          },
+          userData: null
+        });
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        // User is logged in, fetch user data from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+
+        if (!userData) {
+          setAuthState({
+            isAuthenticated: true,
+            isAuthorized: false,
+            authError: {
+              title: "User Profile Not Found",
+              message: "Your user profile could not be found.",
+              returnPath: "/",
+              returnText: "Go to Home"
+            },
+            userData: null
+          });
+          setAuthLoading(false);
+          return;
+        }
+
+        // Check if user is a Foodie
+        if (userData.signupType !== "Foodie") {
+          setAuthState({
+            isAuthenticated: true,
+            isAuthorized: false,
+            authError: {
+              title: "Not Authorized",
+              message: "This page is only accessible to Foodies.",
+              returnPath: userData.signupType === "Food Seller" ? "/seller-edit-profile" : "/",
+              returnText: userData.signupType === "Food Seller" ? "Go to Seller Profile" : "Go to Home"
+            },
+            userData
+          });
+          setAuthLoading(false);
+          return;
+        }
+
+        // User is authenticated and authorized
+        setAuthState({
+          isAuthenticated: true,
+          isAuthorized: true,
+          authError: null,
+          userData
+        });
+        setAuthLoading(false);
+
+        // Fetch detailed user data for the form
+        fetchUserData(user.uid);
+
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setAuthState({
+          isAuthenticated: true,
+          isAuthorized: false,
+          authError: {
+            title: "Error",
+            message: "An error occurred while verifying your access. Please try again.",
+            returnPath: "/",
+            returnText: "Go to Home"
+          },
+          userData: null
+        });
+        setAuthLoading(false);
+      }
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     let interval;
@@ -50,7 +145,7 @@ const EditProfile = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
-  const fetchUserData = async () => {
+  const fetchUserData = async (uid) => {
     try {
       const response = await axios.get(`${API}/users/${uid}`);
       setFormData(response.data);
@@ -72,6 +167,10 @@ const EditProfile = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1); // This will take the user to the previous page
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -82,6 +181,45 @@ const EditProfile = () => {
     setFormData(prev => ({ ...prev, phoneNumber: newPhone }));
     setIsPhoneChanged(newPhone !== originalPhone);
     setIsPhoneVerified(false);
+  };
+
+  const validateFile = (file) => {
+    const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
+    
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File ${file.name} exceeds 3MB limit`);
+      return false;
+    }
+    if (!file.type.startsWith('image/')) {
+      setError(`File ${file.name} is not an image`);
+      return false;
+    }
+    return true;
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file || !validateFile(file)) return;
+
+    try {
+      const uid = auth.currentUser.uid;
+      const storageRef = ref(storage, `profile-photos/${uid}/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(prev => ({ ...prev, profile: progress }));
+        },
+        (error) => setError('Error uploading file'),
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setFormData(prev => ({ ...prev, photoURL: downloadURL }));
+          setUploadProgress(prev => ({ ...prev, profile: 0 }));
+        }
+      );
+    } catch (err) {
+      setError('Error uploading file');
+    }
   };
 
   const sendOTP = async () => {
@@ -124,25 +262,6 @@ const EditProfile = () => {
     }
   };
 
-  const handleFileUpload = async (file) => {
-    if (!file) return;
-    try {
-      const storageRef = ref(storage, `profile-photos/${uid}/${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      
-      uploadTask.on('state_changed',
-        null,
-        (error) => setError('Error uploading file'),
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setFormData(prev => ({ ...prev, photoURL: downloadURL }));
-        }
-      );
-    } catch (err) {
-      setError('Error uploading file');
-    }
-  };
-
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -174,6 +293,7 @@ const EditProfile = () => {
     setIsSubmitting(true);
 
     try {
+      const uid = auth.currentUser.uid;
       await axios.patch(`${API}/users/${uid}`, formData);
       setSuccessMessage('Profile updated successfully!');
       setTimeout(() => {
@@ -191,17 +311,51 @@ const EditProfile = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
+    return <Loader />;
+  }
+
+  if (!authState.isAuthenticated || !authState.isAuthorized) {
     return (
-      <Loader />
+      <UnauthorizedPage
+        title={authState.authError.title}
+        message={authState.authError.message}
+        returnPath={authState.authError.returnPath}
+        returnText={authState.authError.returnText}
+      />
     );
   }
 
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
-    <div className="Edit-Foodie-container">
+    <motion.div
+      className="Edit-Foodie-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <h1 className="Edit-Foodie-title">Edit Profile</h1>
-      {error && <div className="Edit-Foodie-error">{error}</div>}
-      {successMessage && <div className="Edit-Foodie-success">{successMessage}</div>}
+      {error && (
+        <motion.div
+          className="Edit-Foodie-error"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          {error}
+        </motion.div>
+      )}
+      {successMessage && (
+        <motion.div
+          className="Edit-Foodie-success"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          {successMessage}
+        </motion.div>
+      )}
       
       <form onSubmit={handleSubmit} className="Edit-Foodie-form">
         <div className="Edit-Foodie-photo-section">
@@ -212,12 +366,17 @@ const EditProfile = () => {
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            {formData.photoURL && (
-              <img 
+            {formData.photoURL ? (
+              <motion.img 
                 src={formData.photoURL} 
                 alt="Profile" 
                 className="Edit-Foodie-profile-photo" 
+                whileHover={{ scale: 1.05 }}
               />
+            ) : (
+              <div className="Edit-Foodie-photo-placeholder">
+                Upload Profile Photo
+              </div>
             )}
             <input 
               type="file" 
@@ -229,6 +388,11 @@ const EditProfile = () => {
           <div className="Edit-Foodie-photo-instructions">
             Click to edit or drop an image to change
           </div>
+          {uploadProgress.profile > 0 && (
+            <div className="Edit-Foodie-upload-progress">
+              Uploading: {Math.round(uploadProgress.profile)}%
+            </div>
+          )}
         </div>
 
         <div className="Edit-Foodie-form-group">
@@ -268,20 +432,26 @@ const EditProfile = () => {
               disabled={changeCounters.phoneNumber >= 1} 
             />
             {isPhoneChanged && !isPhoneVerified && (
-              <button
+              <motion.button
                 type="button"
                 onClick={sendOTP}
                 className="Edit-Foodie-verify-btn"
                 disabled={timer > 0}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {timer > 0 ? `Resend OTP in ${timer}s` : 'Verify Phone'}
-              </button>
+              </motion.button>
             )}
           </div>
         </div>
 
         {isVerifying && (
-          <div className="Edit-Foodie-form-group">
+          <motion.div 
+            className="Edit-Foodie-form-group"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+          >
             <label>Enter OTP</label>
             <div className="Edit-Foodie-otp-section">
               <input
@@ -292,37 +462,43 @@ const EditProfile = () => {
                 maxLength={6}
                 placeholder="Enter 6-digit OTP"
               />
-              <button
+              <motion.button
                 type="button"
                 onClick={verifyOTP}
                 className="Edit-Foodie-verify-btn"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Verify OTP
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div className="Edit-Foodie-buttons">
-          <button 
+          <motion.button 
             type="submit" 
             className="Edit-Foodie-submit-btn"
             disabled={isSubmitting || (isPhoneChanged && !isPhoneVerified)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Update Profile
-          </button>
-          <button 
+          </motion.button>
+          <motion.button 
             type="button" 
             className="Edit-Foodie-cancel-btn" 
-            onClick={() => navigate('/foodie')}
+            onClick={handleGoBack}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Go Back
-          </button>
+          </motion.button>
         </div>
       </form>
 
       <div id="recaptcha-container"></div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -15,6 +15,7 @@ import MyMenu from "./pages/FoodSeller/MyMenu";
 import TermsAndConditions from "./pages/TermsAndConditions/TC";
 import MyStall from "./pages/FoodSeller/MyStall";
 import Menu from "./pages/Foodie/Menu";
+import Order from "./pages/Foodie/Order";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/seller-menu" element={<MyMenu />} />
           <Route path="/my-stall" element={<MyStall />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/order" element={<Order />} />
         </Routes>
         <Footer />
       </Router>

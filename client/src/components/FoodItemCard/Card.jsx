@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './Card.css';
 
@@ -7,6 +8,7 @@ import './Card.css';
 const API = process.env.REACT_APP_API;
 
 const Card = ({ fid }) => {
+  const navigate = useNavigate();
   const [itemData, setItemData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,6 +31,10 @@ const Card = ({ fid }) => {
     
     fetchItemData();
   }, [fid]);
+
+  const handleOrderNow = () => {
+    navigate(`/order?fid=${fid}`);
+  };
 
   if (loading) {
     return (
@@ -120,6 +126,7 @@ const Card = ({ fid }) => {
             className="Card-order-button"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={handleOrderNow}
           >
             Order Now
           </motion.button>
