@@ -15,7 +15,7 @@ import MyMenu from "./pages/FoodSeller/MyMenu";
 import TermsAndConditions from "./pages/TermsAndConditions/TC";
 import MyStall from "./pages/FoodSeller/MyStall";
 import Menu from "./pages/Foodie/Menu";
-import Order from "./pages/Foodie/Order";
+import Order from "./pages/Order/Order";
 
 function App() {
   return (
