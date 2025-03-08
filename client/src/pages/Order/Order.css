@@ -116,6 +116,116 @@
     transition: all 0.3s ease;
 }
 
+.Order-place-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Order Modal Styles */
+.OrderModal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.OrderModal-container {
+    background-color: white;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.OrderModal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.OrderModal-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #28a745;
+    width: 50px;
+    height: 50px;
+    animation: OrderModal-spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes OrderModal-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.OrderModal-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.OrderModal-success-icon {
+    color: #28a745;
+}
+
+.OrderModal-error-icon {
+    color: #dc3545;
+}
+
+.OrderModal-timer {
+    margin-top: 10px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.OrderModal-button {
+    margin-top: 20px;
+    padding: 10px 25px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.OrderModal-button:hover {
+    background-color: #218838;
+}
+
+.OrderModal-button-secondary {
+    background-color: #6c757d;
+    margin-right: 10px;
+}
+
+.OrderModal-button-secondary:hover {
+    background-color: #5a6268;
+}
+
+.OrderModal-button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.OrderModal-token {
+    font-size: 1.5rem;
+    margin: 15px 0;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #28a745;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .Order-content {
@@ -133,6 +243,11 @@
     }
 
     .Order-details {
+        padding: 20px;
+    }
+    
+    .OrderModal-container {
+        width: 95%;
         padding: 20px;
     }
 }

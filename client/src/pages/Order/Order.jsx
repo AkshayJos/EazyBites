@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebaseConfig';
+import { doc, getDoc, collection, addDoc, updateDoc, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { ref, set, onValue, update } from 'firebase/database';
+import { auth, db, database } from '../../firebaseConfig';
 import Loader from '../../components/Loader/Loader';
 import UnauthorizedPage from '../Unauthorized/Unauthorized';
 import './Order.css';
@@ -12,13 +13,26 @@ import './Order.css';
 // API URL
 const API = process.env.REACT_APP_API;
 
+// Generate a random token
+const generateToken = () => {
+    return Math.floor(1000 + Math.random() * 9000); // 4-digit token
+};
+
 const Order = () => {
     const [searchParams] = useSearchParams();
     const fid = searchParams.get('fid');
     const [itemData, setItemData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [dataLoading, setDataLoading] = useState(true); // Separate loading state for item data
+    const [dataLoading, setDataLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
+    const [orderStatus, setOrderStatus] = useState(null);
+    const [waitingTime, setWaitingTime] = useState(null);
+    const [token, setToken] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState(''); // 'processing', 'timedout', 'accepted', 'confirmed'
+    const timerRef = useRef(null);
+    const orderRef = useRef(null);
+    const navigate = useNavigate();
     const [authState, setAuthState] = useState({
         isAuthenticated: false,
         isAuthorized: false,
@@ -118,13 +132,12 @@ const Order = () => {
     useEffect(() => {
         const fetchItemData = async () => {
             if (authState.isAuthenticated && authState.isAuthorized) {
-                setDataLoading(true); // Start loading state for data fetching
+                setDataLoading(true);
                 try {
                     const response = await axios.get(`${API}/food/foodItem/${fid}`);
                     setItemData(response.data);
                 } catch (error) {
                     console.error('Error fetching item data:', error);
-                    // We don't set itemData to null here, keep previous state if any
                 } finally {
                     setDataLoading(false);
                 }
@@ -134,19 +147,175 @@ const Order = () => {
         fetchItemData();
     }, [fid, authState.isAuthenticated, authState.isAuthorized]);
 
+    // Cleanup timer when component unmounts
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            if (orderRef.current) orderRef.current();
+        };
+    }, []);
+
     const handleQuantityChange = (newQuantity) => {
         if (newQuantity >= 1 && newQuantity <= 5) {
             setQuantity(newQuantity);
         }
     };
 
-    const handlePlaceOrder = () => {
-        // TODO: Implement order placement logic
-        console.log('Placing order:', {
-            itemId: fid,
-            quantity,
-            totalPrice: itemData.price * quantity
-        });
+    const handlePlaceOrder = async () => {
+        if (!authState.isAuthenticated || !authState.isAuthorized || !itemData) {
+            return;
+        }
+
+        try {
+            // Set modal to processing state
+            setModalType('processing');
+            setShowModal(true);
+
+            // Calculate total cost
+            const totalCost = itemData.price * quantity;
+
+            // Create a new document in Firestore under user's orders subcollection
+            const ordersCollectionRef = collection(db, "users", auth.currentUser.uid, "orders");
+            const newOrderDoc = await addDoc(ordersCollectionRef, {
+                fid: fid,
+                sid: itemData.seller,
+                quantity: quantity,
+                totalCost: totalCost,
+                timestamp: new Date(),
+                status: "created"
+            });
+
+            // Use the same document ID for the real-time database entry
+            const orderId = newOrderDoc.id;
+            
+            // Create entry in real-time database
+            const orderRtdbRef = ref(database, `orders/${orderId}`);
+            await set(orderRtdbRef, {
+                uid: auth.currentUser.uid,
+                fid: fid,
+                sid: itemData.seller,
+                quantity: quantity,
+                totalCost: totalCost,
+                itemName: itemData.name,
+                stallName: itemData.stallName,
+                status: "created",
+                timestamp: Date.now()
+            });
+
+            // Set a timeout of 1 minute for the seller to accept the order
+            timerRef.current = setTimeout(async () => {
+                // Check current status before timing out
+                const orderSnapshot = await getDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId));
+                if (orderSnapshot.exists() && orderSnapshot.data().status === "created") {
+                    // Update status in firestore
+                    await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+                        status: "timedout"
+                    });
+                    
+                    // Update status in real-time database
+                    await update(ref(database, `orders/${orderId}`), {
+                        status: "timedout"
+                    });
+
+                    // Update UI
+                    setOrderStatus("timedout");
+                    setModalType('timedout');
+                }
+            }, 60000); // 1 minute timeout
+
+            // Listen for changes to the order in the real-time database
+            orderRef.current = onValue(orderRtdbRef, async (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    setOrderStatus(data.status);
+                    
+                    // Handle different status updates
+                    if (data.status === "accepted") {
+                        setWaitingTime(data.waitingTime || 0);
+                        setModalType('accepted');
+                    } else if (data.status === "foodieAgreed") {
+                        setToken(data.token);
+                        setModalType('confirmed');
+                    }
+                    
+                    // Update the Firestore document to match RTDB
+                    await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+                        status: data.status,
+                        ...(data.waitingTime && { waitingTime: data.waitingTime }),
+                        ...(data.token && { token: data.token })
+                    });
+                }
+            });
+
+        } catch (error) {
+            console.error('Error placing order:', error);
+            setModalType('error');
+        }
+    };
+
+    const handleAcceptWaitingTime = async () => {
+        if (!orderStatus || orderStatus !== 'accepted') return;
+        
+        try {
+            // Find the order ID in the modal context
+            const userOrdersRef = collection(db, "users", auth.currentUser.uid, "orders");
+            const q = query(userOrdersRef, where("status", "==", "accepted"), orderBy("timestamp", "desc"), limit(1));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+                const orderId = querySnapshot.docs[0].id;
+                const generatedToken = generateToken();
+                
+                // Update status in real-time database
+                await update(ref(database, `orders/${orderId}`), {
+                    status: "foodieAgreed",
+                    token: generatedToken
+                });
+                
+                setToken(generatedToken);
+                setOrderStatus("foodieAgreed");
+                setModalType('confirmed');
+            }
+        } catch (error) {
+            console.error('Error accepting waiting time:', error);
+        }
+    };
+
+    const handleDeclineWaitingTime = async () => {
+        try {
+            // Find the order ID in the modal context
+            const userOrdersRef = collection(db, "users", auth.currentUser.uid, "orders");
+            const q = query(userOrdersRef, where("status", "==", "accepted"), orderBy("timestamp", "desc"), limit(1));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+                const orderId = querySnapshot.docs[0].id;
+                
+                // Update status in real-time database
+                await update(ref(database, `orders/${orderId}`), {
+                    status: "foodieDeclined"
+                });
+                
+                // Update status in firestore
+                await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+                    status: "foodieDeclined"
+                });
+                
+                setShowModal(false);
+                // Optionally redirect the user
+                navigate('/menu');
+            }
+        } catch (error) {
+            console.error('Error declining waiting time:', error);
+        }
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        if (modalType === 'timedout' || modalType === 'error') {
+            // Optionally redirect the user
+            navigate('/menu');
+        }
     };
 
     // Show loader when authentication is being checked or when data is being fetched
@@ -247,6 +416,7 @@ const Order = () => {
                                 onClick={handlePlaceOrder}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
+                                disabled={orderStatus === 'created' || orderStatus === 'accepted' || orderStatus === 'foodieAgreed'}
                             >
                                 Place Order
                             </motion.button>
@@ -254,6 +424,70 @@ const Order = () => {
                     )}
                 </div>
             </motion.div>
+
+            {/* Order Status Modal */}
+            {showModal && (
+                <div className="OrderModal-overlay">
+                    <motion.div 
+                        className="OrderModal-container"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                    >
+                        {modalType === 'processing' && (
+                            <div className="OrderModal-content">
+                                <div className="OrderModal-spinner"></div>
+                                <h2>Processing Your Order</h2>
+                                <p>Waiting for the seller to accept your order...</p>
+                                <p className="OrderModal-timer">This may take up to 1 minute</p>
+                            </div>
+                        )}
+
+                        {modalType === 'timedout' && (
+                            <div className="OrderModal-content">
+                                <div className="OrderModal-icon OrderModal-error-icon">⚠️</div>
+                                <h2>Order Timed Out</h2>
+                                <p>The seller did not respond in time. Please try again later.</p>
+                                <button className="OrderModal-button" onClick={closeModal}>OK</button>
+                            </div>
+                        )}
+
+                        {modalType === 'accepted' && (
+                            <div className="OrderModal-content">
+                                <div className="OrderModal-icon OrderModal-success-icon">✓</div>
+                                <h2>Order Accepted!</h2>
+                                <p>The seller has accepted your order.</p>
+                                <p>Estimated waiting time: <strong>{waitingTime} minutes</strong></p>
+                                <p>Do you agree with this waiting time?</p>
+                                <div className="OrderModal-button-group">
+                                    <button className="OrderModal-button OrderModal-button-secondary" onClick={handleDeclineWaitingTime}>Decline</button>
+                                    <button className="OrderModal-button" onClick={handleAcceptWaitingTime}>Accept</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {modalType === 'confirmed' && (
+                            <div className="OrderModal-content">
+                                <div className="OrderModal-icon OrderModal-success-icon">✓</div>
+                                <h2>Order Confirmed!</h2>
+                                <p>Your order has been confirmed.</p>
+                                <p className="OrderModal-token">Your token number: <strong>{token}</strong></p>
+                                <p>Please reach the stall within the allotted time.</p>
+                                <button className="OrderModal-button" onClick={closeModal}>OK</button>
+                            </div>
+                        )}
+
+                        {modalType === 'error' && (
+                            <div className="OrderModal-content">
+                                <div className="OrderModal-icon OrderModal-error-icon">⚠️</div>
+                                <h2>Error</h2>
+                                <p>An error occurred while placing your order. Please try again.</p>
+                                <button className="OrderModal-button" onClick={closeModal}>OK</button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };
