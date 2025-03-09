@@ -39,6 +39,10 @@ const Order = () => {
         authError: null,
         userData: null
     });
+    const [currentOrderIds, setCurrentOrderIds] = useState({
+        globalOrderId: null,
+        userOrderId: null
+    });
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -87,8 +91,8 @@ const Order = () => {
                         isAuthorized: false,
                         authError: {
                             title: "Not Authorized",
-                            message: userData.signupType !== "Foodie" 
-                                ? "Only Foodies can place orders." 
+                            message: userData.signupType !== "Foodie"
+                                ? "Only Foodies can place orders."
                                 : "Please complete your profile by adding a phone number.",
                             returnPath: userData.signupType !== "Foodie" ? "/" : "/foodie-edit-profile",
                             returnText: userData.signupType !== "Foodie" ? "Go to Home" : "Complete Profile"
@@ -161,6 +165,106 @@ const Order = () => {
         }
     };
 
+    // const handlePlaceOrder = async () => {
+    //     if (!authState.isAuthenticated || !authState.isAuthorized || !itemData) {
+    //         return;
+    //     }
+
+    //     try {
+    //         // Set modal to processing state
+    //         setModalType('processing');
+    //         setShowModal(true);
+
+    //         // Calculate total cost
+    //         const totalCost = itemData.price * quantity;
+
+    //         // Create the order in the global orders collection
+    //         const ordersCollectionRef = collection(db, 'orders');
+    //         const newOrderDoc = await addDoc(ordersCollectionRef, {
+    //             uid: auth.currentUser.uid,
+    //             fid: fid,
+    //             sid: itemData.seller,
+    //             quantity: quantity,
+    //             totalCost: totalCost,
+    //             timestamp: new Date(),
+    //             status: "created"
+    //         });
+
+    //         // Save the order ID reference in the user's subcollection
+    //         await addDoc(collection(db, `users/${auth.currentUser.uid}/orders`), {
+    //             orderId: newOrderDoc.id,
+    //             status: "created"
+    //         });
+
+    //         // Use the same document ID for the real-time database entry
+    //         const orderId = newOrderDoc.id;
+
+    //         // Create entry in real-time database
+    //         const orderRtdbRef = ref(database, `orders/${orderId}`);
+    //         await set(orderRtdbRef, {
+    //             uid: auth.currentUser.uid,
+    //             fid: fid,
+    //             sid: itemData.seller,
+    //             quantity: quantity,
+    //             totalCost: totalCost,
+    //             itemName: itemData.name,
+    //             stallName: itemData.stallName,
+    //             status: "created",
+    //             timestamp: Date.now()
+    //         });
+
+    //         // Set a timeout of 1 minute for the seller to accept the order
+    //         timerRef.current = setTimeout(async () => {
+    //             // Check current status before timing out
+    //             const orderSnapshot = await getDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId));
+    //             if (orderSnapshot.exists() && orderSnapshot.data().status === "created") {
+    //                 // Update status in firestore
+    //                 await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+    //                     status: "timedout"
+    //                 });
+
+    //                 // Update status in real-time database
+    //                 await update(ref(database, `orders/${orderId}`), {
+    //                     status: "timedout"
+    //                 });
+
+    //                 // Update UI
+    //                 setOrderStatus("timedout");
+    //                 setModalType('timedout');
+    //             }
+    //         }, 60000); // 1 minute timeout
+
+    //         // Listen for changes to the order in the real-time database
+    //         orderRef.current = onValue(orderRtdbRef, async (snapshot) => {
+    //             const data = snapshot.val();
+    //             if (data) {
+    //                 setOrderStatus(data.status);
+
+    //                 // Handle different status updates
+    //                 if (data.status === "accepted") {
+    //                     setWaitingTime(data.waitingTime || 0);
+    //                     setModalType('accepted');
+    //                 } else if (data.status === "foodieAgreed") {
+    //                     setToken(data.token);
+    //                     setModalType('confirmed');
+    //                 }
+
+    //                 // Update the Firestore document to match RTDB
+    //                 await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+    //                     status: data.status,
+    //                     ...(data.waitingTime && { waitingTime: data.waitingTime }),
+    //                     ...(data.token && { token: data.token })
+    //                 });
+    //             }
+    //         });
+
+    //     } catch (error) {
+    //         console.error('Error placing order:', error);
+    //         setModalType('error');
+    //     }
+    // };
+
+    // In the handlePlaceOrder function, store the reference ID
     const handlePlaceOrder = async () => {
         if (!authState.isAuthenticated || !authState.isAuthorized || !itemData) {
             return;
@@ -174,9 +278,10 @@ const Order = () => {
             // Calculate total cost
             const totalCost = itemData.price * quantity;
 
-            // Create a new document in Firestore under user's orders subcollection
-            const ordersCollectionRef = collection(db, "users", auth.currentUser.uid, "orders");
+            // Create the order in the global orders collection
+            const ordersCollectionRef = collection(db, 'orders');
             const newOrderDoc = await addDoc(ordersCollectionRef, {
+                uid: auth.currentUser.uid,
                 fid: fid,
                 sid: itemData.seller,
                 quantity: quantity,
@@ -185,9 +290,24 @@ const Order = () => {
                 status: "created"
             });
 
-            // Use the same document ID for the real-time database entry
+            // Save the order ID reference in the user's subcollection and STORE THE REFERENCE
+            const userOrderRef = await addDoc(collection(db, `users/${auth.currentUser.uid}/orders`), {
+                orderId: newOrderDoc.id,
+                status: "created"
+            });
+
+            // Store the user order reference ID for later use
+            const userOrderId = userOrderRef.id;
+
+            // Use the global order ID for the real-time database entry
             const orderId = newOrderDoc.id;
-            
+
+            // Store these IDs in state for later use
+            setCurrentOrderIds({
+                globalOrderId: orderId,
+                userOrderId
+            });
+
             // Create entry in real-time database
             const orderRtdbRef = ref(database, `orders/${orderId}`);
             await set(orderRtdbRef, {
@@ -199,19 +319,25 @@ const Order = () => {
                 itemName: itemData.name,
                 stallName: itemData.stallName,
                 status: "created",
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                userOrderId: userOrderId
             });
 
             // Set a timeout of 1 minute for the seller to accept the order
             timerRef.current = setTimeout(async () => {
                 // Check current status before timing out
-                const orderSnapshot = await getDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId));
+                const orderSnapshot = await getDoc(doc(db, "orders", orderId));
                 if (orderSnapshot.exists() && orderSnapshot.data().status === "created") {
-                    // Update status in firestore
-                    await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+                    // Update status in global orders collection
+                    await updateDoc(doc(db, "orders", orderId), {
                         status: "timedout"
                     });
-                    
+
+                    // Update status in user's orders subcollection
+                    await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", userOrderId), {
+                        status: "timedout"
+                    });
+
                     // Update status in real-time database
                     await update(ref(database, `orders/${orderId}`), {
                         status: "timedout"
@@ -228,7 +354,7 @@ const Order = () => {
                 const data = snapshot.val();
                 if (data) {
                     setOrderStatus(data.status);
-                    
+
                     // Handle different status updates
                     if (data.status === "accepted") {
                         setWaitingTime(data.waitingTime || 0);
@@ -237,9 +363,16 @@ const Order = () => {
                         setToken(data.token);
                         setModalType('confirmed');
                     }
-                    
-                    // Update the Firestore document to match RTDB
-                    await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
+
+                    // Update the global Firestore order document
+                    await updateDoc(doc(db, "orders", orderId), {
+                        status: data.status,
+                        ...(data.waitingTime && { waitingTime: data.waitingTime }),
+                        ...(data.token && { token: data.token })
+                    });
+
+                    // Update the user's order document using the stored reference ID
+                    await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", userOrderId), {
                         status: data.status,
                         ...(data.waitingTime && { waitingTime: data.waitingTime }),
                         ...(data.token && { token: data.token })
@@ -254,28 +387,37 @@ const Order = () => {
     };
 
     const handleAcceptWaitingTime = async () => {
-        if (!orderStatus || orderStatus !== 'accepted') return;
-        
         try {
-            // Find the order ID in the modal context
-            const userOrdersRef = collection(db, "users", auth.currentUser.uid, "orders");
-            const q = query(userOrdersRef, where("status", "==", "accepted"), orderBy("timestamp", "desc"), limit(1));
-            const querySnapshot = await getDocs(q);
+            // Use the stored order IDs instead of querying
+            const { globalOrderId, userOrderId } = currentOrderIds;
             
-            if (!querySnapshot.empty) {
-                const orderId = querySnapshot.docs[0].id;
-                const generatedToken = generateToken();
-                
-                // Update status in real-time database
-                await update(ref(database, `orders/${orderId}`), {
-                    status: "foodieAgreed",
-                    token: generatedToken
-                });
-                
-                setToken(generatedToken);
-                setOrderStatus("foodieAgreed");
-                setModalType('confirmed');
+            if (!globalOrderId || !userOrderId) {
+                console.error('Order IDs not found');
+                return;
             }
+    
+            const generatedToken = generateToken();
+    
+            // Update RTDB
+            await update(ref(database, `orders/${globalOrderId}`), {
+                status: 'foodieAgreed',
+                token: generatedToken
+            });
+    
+            // Update global order
+            await updateDoc(doc(db, 'orders', globalOrderId), {
+                status: 'foodieAgreed',
+                token: generatedToken
+            });
+    
+            // Update user's order
+            await updateDoc(doc(db, 'users', auth.currentUser.uid, 'orders', userOrderId), {
+                status: 'foodieAgreed',
+                token: generatedToken  // Add the token here too
+            });
+    
+            setToken(generatedToken);
+            setModalType('confirmed');
         } catch (error) {
             console.error('Error accepting waiting time:', error);
         }
@@ -283,28 +425,31 @@ const Order = () => {
 
     const handleDeclineWaitingTime = async () => {
         try {
-            // Find the order ID in the modal context
-            const userOrdersRef = collection(db, "users", auth.currentUser.uid, "orders");
-            const q = query(userOrdersRef, where("status", "==", "accepted"), orderBy("timestamp", "desc"), limit(1));
-            const querySnapshot = await getDocs(q);
+            // Use the stored order IDs instead of querying
+            const { globalOrderId, userOrderId } = currentOrderIds;
             
-            if (!querySnapshot.empty) {
-                const orderId = querySnapshot.docs[0].id;
-                
-                // Update status in real-time database
-                await update(ref(database, `orders/${orderId}`), {
-                    status: "foodieDeclined"
-                });
-                
-                // Update status in firestore
-                await updateDoc(doc(db, "users", auth.currentUser.uid, "orders", orderId), {
-                    status: "foodieDeclined"
-                });
-                
-                setShowModal(false);
-                // Optionally redirect the user
-                navigate('/menu');
+            if (!globalOrderId || !userOrderId) {
+                console.error('Order IDs not found');
+                return;
             }
+    
+            // Update RTDB
+            await update(ref(database, `orders/${globalOrderId}`), {
+                status: 'foodieDeclined'
+            });
+    
+            // Update global order
+            await updateDoc(doc(db, 'orders', globalOrderId), {
+                status: 'foodieDeclined'
+            });
+    
+            // Update user's order
+            await updateDoc(doc(db, 'users', auth.currentUser.uid, 'orders', userOrderId), {
+                status: 'foodieDeclined'
+            });
+    
+            setShowModal(false);
+            navigate('/menu');
         } catch (error) {
             console.error('Error declining waiting time:', error);
         }
@@ -345,7 +490,7 @@ const Order = () => {
 
     return (
         <div className="Order-container">
-            <motion.div 
+            <motion.div
                 className="Order-content"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -354,9 +499,9 @@ const Order = () => {
                 <div className="Order-image-gallery">
                     <AnimatePresence>
                         {itemData && itemData.photoURLs && itemData.photoURLs.map((url, index) => (
-                            <motion.img 
+                            <motion.img
                                 key={index}
-                                src={url} 
+                                src={url}
                                 alt={`${itemData.name} - view ${index + 1}`}
                                 className="Order-image"
                                 initial={{ opacity: 0 }}
@@ -371,7 +516,7 @@ const Order = () => {
                 <div className="Order-details">
                     {itemData && (
                         <>
-                            <motion.h1 
+                            <motion.h1
                                 className="Order-name"
                                 whileHover={{ scale: 1.05 }}
                             >
@@ -393,7 +538,7 @@ const Order = () => {
                                 </div>
 
                                 <div className="Order-quantity">
-                                    <button 
+                                    <button
                                         onClick={() => handleQuantityChange(quantity - 1)}
                                         disabled={quantity <= 1}
                                         className="Order-quantity-btn"
@@ -401,7 +546,7 @@ const Order = () => {
                                         -
                                     </button>
                                     <span className="Order-quantity-display">{quantity}</span>
-                                    <button 
+                                    <button
                                         onClick={() => handleQuantityChange(quantity + 1)}
                                         disabled={quantity >= 5}
                                         className="Order-quantity-btn"
@@ -411,7 +556,7 @@ const Order = () => {
                                 </div>
                             </div>
 
-                            <motion.button 
+                            <motion.button
                                 className="Order-place-button"
                                 onClick={handlePlaceOrder}
                                 whileHover={{ scale: 1.05 }}
@@ -428,7 +573,7 @@ const Order = () => {
             {/* Order Status Modal */}
             {showModal && (
                 <div className="OrderModal-overlay">
-                    <motion.div 
+                    <motion.div
                         className="OrderModal-container"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
