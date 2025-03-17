@@ -242,52 +242,52 @@ const MyStall = () => {
 
       <div className="MyStall-orders-section">
         <h2 className="MyStall-orders-heading">New Orders</h2>
-        <div className="MyStall-orders-container">
-          <AnimatePresence>
-            {pendingOrders.length > 0 ? (
-              pendingOrders.map(order => (
+        {pendingOrders.length > 0 ? (
+          <div className="MyStall-orders-container">
+            <AnimatePresence>
+              {pendingOrders.map(order => (
                 <OrderCard 
                   key={order.id} 
                   order={order} 
                   onStatusChange={handleOrderStatusChange} 
                 />
-              ))
-            ) : (
-              <motion.p 
-                className="MyStall-no-orders"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                No new orders right now.
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
+              ))}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <motion.p 
+            className="MyStall-no-orders-message"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            No new orders right now.
+          </motion.p>
+        )}
 
         <h2 className="MyStall-orders-heading">In Progress Orders</h2>
-        <div className="MyStall-orders-container">
-          <AnimatePresence>
-            {acceptedOrders.length > 0 ? (
-              acceptedOrders.map(order => (
+        {acceptedOrders.length > 0 ? (
+          <div className="MyStall-orders-container">
+            <AnimatePresence>
+              {acceptedOrders.map(order => (
                 <OrderCard 
                   key={order.id} 
                   order={order} 
                   onStatusChange={handleOrderStatusChange} 
                 />
-              ))
-            ) : (
-              <motion.p 
-                className="MyStall-no-orders"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                No orders in progress.
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
+              ))}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <motion.p 
+            className="MyStall-no-orders-message"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            No orders in progress.
+          </motion.p>
+        )}
       </div>
     </div>
   );
