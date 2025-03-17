@@ -1,3 +1,5 @@
+/* Order.css - Contains all styles for the Order component and modals */
+
 .Order-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -6,6 +8,7 @@
     justify-content: center;
     align-items: center;
     min-height: calc(100vh - 100px);
+    position: relative;
 }
 
 .Order-content {
@@ -116,114 +119,151 @@
     transition: all 0.3s ease;
 }
 
-.Order-place-button:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-}
-
 /* Order Modal Styles */
-.OrderModal-overlay {
+.Order-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
 }
 
-.OrderModal-container {
+.Order-modal {
     background-color: white;
-    border-radius: 15px;
     padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     max-width: 500px;
     width: 90%;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.OrderModal-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     text-align: center;
 }
 
-.OrderModal-spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
-    border-top: 4px solid #28a745;
-    width: 50px;
-    height: 50px;
-    animation: OrderModal-spin 1s linear infinite;
+.Order-modal-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.Order-modal-message {
+    font-size: 1.1rem;
+    color: #555;
     margin-bottom: 20px;
+    line-height: 1.5;
 }
 
-@keyframes OrderModal-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.OrderModal-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-}
-
-.OrderModal-success-icon {
-    color: #28a745;
-}
-
-.OrderModal-error-icon {
-    color: #dc3545;
-}
-
-.OrderModal-timer {
-    margin-top: 10px;
-    color: #6c757d;
-    font-style: italic;
-}
-
-.OrderModal-button {
-    margin-top: 20px;
-    padding: 10px 25px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
+.Order-modal-submessage {
     font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    color: #666;
+    margin-bottom: 15px;
 }
 
-.OrderModal-button:hover {
-    background-color: #218838;
-}
-
-.OrderModal-button-secondary {
-    background-color: #6c757d;
-    margin-right: 10px;
-}
-
-.OrderModal-button-secondary:hover {
-    background-color: #5a6268;
-}
-
-.OrderModal-button-group {
+.Order-timer-container {
     display: flex;
     justify-content: center;
+    margin: 20px 0;
+}
+
+.Order-modal-actions {
+    display: flex;
+    justify-content: space-between;
     gap: 15px;
     margin-top: 20px;
 }
 
-.OrderModal-token {
-    font-size: 1.5rem;
-    margin: 15px 0;
-    padding: 10px 20px;
-    background-color: #f8f9fa;
+.Order-modal-btn {
+    padding: 12px 24px;
     border-radius: 8px;
-    border: 1px dashed #28a745;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.Order-modal-btn-agree {
+    background-color: #28a745;
+    color: white;
+}
+
+.Order-modal-btn-agree:hover {
+    background-color: #218838;
+}
+
+.Order-modal-btn-decline {
+    background-color: #dc3545;
+    color: white;
+}
+
+.Order-modal-btn-decline:hover {
+    background-color: #c82333;
+}
+
+.Order-modal-btn-close {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 30px;
+    margin-top: 15px;
+}
+
+.Order-modal-btn-close:hover {
+    background-color: #0069d9;
+}
+
+.Order-token-container {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.Order-token-label {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.Order-token-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.Order-wait-time {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.Order-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.5rem;
+    color: #dc3545;
+}
+
+/* Countdown Timer Styles */
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #f44336;
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.timer-circle {
+    width: 60px;
+    height: 60px;
+    position: absolute;
 }
 
 /* Responsive Design */
@@ -245,18 +285,22 @@
     .Order-details {
         padding: 20px;
     }
-    
-    .OrderModal-container {
+
+    .Order-modal {
         width: 95%;
         padding: 20px;
     }
-}
 
-.Order-error {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-size: 1.5rem;
-    color: #dc3545;
+    .Order-modal-title {
+        font-size: 1.5rem;
+    }
+
+    .Order-modal-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .Order-modal-btn {
+        width: 100%;
+    }
 }

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { ref, set, onValue, off } from "firebase/database";
+import { ref, set, onValue, off, query, orderByChild, equalTo } from "firebase/database";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, database, db } from "../../firebaseConfig";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import UnauthorizedPage from "../Unauthorized/Unauthorized";
 import Loader from "../../components/Loader/Loader";
+import OrderCard from "../Order/OrderCard"; // Import the new component
 import "./MyStall.css";
 
 const MyStall = () => {
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     isAuthorized: false,
@@ -111,10 +114,35 @@ const MyStall = () => {
           setIsLive(snapshot.val() || false);
         });
         
+        // Fetch orders for this seller
+        const ordersRef = query(
+          ref(database, "orders"), 
+          orderByChild("sid"), 
+          equalTo(currentUser.uid)
+        );
+        
+        const ordersListener = onValue(ordersRef, (snapshot) => {
+          const ordersData = snapshot.val();
+          if (ordersData) {
+            const ordersList = Object.entries(ordersData).map(([id, data]) => ({
+              id,
+              ...data
+            }));
+            
+            // Sort orders by timestamp (newest first)
+            ordersList.sort((a, b) => b.timestamp - a.timestamp);
+            
+            setOrders(ordersList);
+          } else {
+            setOrders([]);
+          }
+        });
+        
         setLoading(false);
         
         return () => {
           off(storeRef, "value", statusListener);
+          off(ordersRef, "value", ordersListener);
         };
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -153,6 +181,28 @@ const MyStall = () => {
     }
   };
 
+  const handleOrderStatusChange = (orderId, newStatus, waitTime) => {
+    // Update order status locally for real-time UI update
+    setOrders(prevOrders => 
+      prevOrders.map(order => {
+        if (order.id === orderId) {
+          return { ...order, status: newStatus, waitTime: waitTime || order.waitingTime };
+        }
+        return order;
+      })
+    );
+  };
+
+  // Filter orders by status for display
+  const activeOrders = orders.filter(order => 
+    !["timeoutSeller", "timeoutFoodie", "completed", "foodieDeclined", "rejected", "cancelled"].includes(order.status)
+  );
+
+  const pendingOrders = activeOrders.filter(order => order.status === "created");
+  const acceptedOrders = activeOrders.filter(order => 
+    ["accepted", "foodieAgreed", "cooking"].includes(order.status)
+  );
+
   if (loading) {
     return <Loader />;
   }
@@ -189,9 +239,55 @@ const MyStall = () => {
           <span className="MyStall-slider"></span>
         </label>
       </div>
-      <h2 className="MyStall-orders-heading">Orders</h2>
-      <div className="MyStall-orders-container">
-        <p className="MyStall-no-orders">No live orders yet.</p>
+
+      <div className="MyStall-orders-section">
+        <h2 className="MyStall-orders-heading">New Orders</h2>
+        <div className="MyStall-orders-container">
+          <AnimatePresence>
+            {pendingOrders.length > 0 ? (
+              pendingOrders.map(order => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  onStatusChange={handleOrderStatusChange} 
+                />
+              ))
+            ) : (
+              <motion.p 
+                className="MyStall-no-orders"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                No new orders right now.
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <h2 className="MyStall-orders-heading">In Progress Orders</h2>
+        <div className="MyStall-orders-container">
+          <AnimatePresence>
+            {acceptedOrders.length > 0 ? (
+              acceptedOrders.map(order => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  onStatusChange={handleOrderStatusChange} 
+                />
+              ))
+            ) : (
+              <motion.p 
+                className="MyStall-no-orders"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                No orders in progress.
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
