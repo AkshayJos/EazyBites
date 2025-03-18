@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ref, set, onValue, off, query, orderByChild, equalTo } from "firebase/database";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, database, db } from "../../firebaseConfig";
@@ -6,14 +6,29 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import UnauthorizedPage from "../Unauthorized/Unauthorized";
 import Loader from "../../components/Loader/Loader";
-import OrderCard from "../Order/OrderCard"; // Import the new component
+import OrderCard from "../Order/OrderCard";
 import "./MyStall.css";
+
+// Import notification sounds
+// Add these audio files to your public folder
+const NOTIFICATION_SOUNDS = {
+  newOrder: "/sounds/new-order.wav",
+  orderUpdated: "/sounds/order-updated.wav",
+  orderCancelled: "/sounds/order-cancelled.wav"
+};
 
 const MyStall = () => {
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const previousOrdersRef = useRef([]);
+  const audioRefs = {
+    newOrder: useRef(null),
+    orderUpdated: useRef(null),
+    orderCancelled: useRef(null)
+  };
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     isAuthorized: false,
@@ -21,6 +36,18 @@ const MyStall = () => {
     userData: null
   });
   const navigate = useNavigate();
+
+  // Initialize Audio elements
+  useEffect(() => {
+    Object.keys(NOTIFICATION_SOUNDS).forEach(type => {
+      const audio = new Audio(NOTIFICATION_SOUNDS[type]);
+      audioRefs[type].current = audio;
+    });
+
+    // Load notification preference from localStorage
+    const savedPref = localStorage.getItem('notificationsEnabled');
+    setNotificationsEnabled(savedPref === 'true');
+  }, []);
 
   useEffect(() => {
     const unsubAuth = auth.onAuthStateChanged(async (currentUser) => {
@@ -132,9 +159,18 @@ const MyStall = () => {
             // Sort orders by timestamp (newest first)
             ordersList.sort((a, b) => b.timestamp - a.timestamp);
             
+            // Check for notifications
+            if (notificationsEnabled && previousOrdersRef.current.length > 0) {
+              handleNotifications(previousOrdersRef.current, ordersList);
+            }
+            
+            // Update previous orders for next comparison
+            previousOrdersRef.current = ordersList;
+            
             setOrders(ordersList);
           } else {
             setOrders([]);
+            previousOrdersRef.current = [];
           }
         });
         
@@ -164,7 +200,88 @@ const MyStall = () => {
     return () => {
       if (unsubAuth) unsubAuth();
     };
-  }, [navigate]);
+  }, [navigate, notificationsEnabled]);
+
+  // Function to detect changes and trigger appropriate notifications
+  const handleNotifications = (prevOrders, newOrders) => {
+    // Create maps for faster lookup
+    const prevOrderMap = new Map(prevOrders.map(order => [order.id, order]));
+    
+    // Check for new orders
+    for (const order of newOrders) {
+      const prevOrder = prevOrderMap.get(order.id);
+      
+      // New order
+      if (!prevOrder && order.status === "created") {
+        showNotification("New Order", `New order #${order.id.slice(-4)} received!`, "newOrder");
+        continue;
+      }
+      
+      // Status changes for existing orders
+      if (prevOrder && prevOrder.status !== order.status) {
+        let title, message, sound;
+        
+        switch (order.status) {
+          case "foodieAgreed":
+            title = "Order Confirmed";
+            message = `Customer confirmed order #${order.id.slice(-4)}`;
+            sound = "orderUpdated";
+            break;
+          case "completed":
+            title = "Order Completed";
+            message = `Order #${order.id.slice(-4)} is now complete`;
+            sound = "orderUpdated";
+            break;
+          case "cancelled":
+          case "rejected":
+          case "timeoutFoodie":
+          case "timeoutSeller":
+          case "foodieDeclined":
+            title = "Order Cancelled";
+            message = `Order #${order.id.slice(-4)} has been ${order.status}`;
+            sound = "orderCancelled";
+            break;
+          default:
+            title = "Order Updated";
+            message = `Order #${order.id.slice(-4)} status: ${order.status}`;
+            sound = "orderUpdated";
+        }
+        
+        showNotification(title, message, sound);
+      }
+    }
+  };
+
+  // Show browser notification and play sound
+  const showNotification = (title, body, soundType) => {
+    // Play notification sound
+    if (audioRefs[soundType] && audioRefs[soundType].current) {
+      audioRefs[soundType].current.play().catch(e => console.error("Audio play error:", e));
+    }
+    
+    // Check if browser notifications are supported and permission is granted
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification(title, { body });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            new Notification(title, { body });
+          }
+        });
+      }
+    }
+  };
+
+  const toggleNotifications = () => {
+    const newStatus = !notificationsEnabled;
+    setNotificationsEnabled(newStatus);
+    localStorage.setItem('notificationsEnabled', newStatus);
+    
+    if (newStatus && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  };
 
   const handleToggle = async () => {
     if (!user) return;
@@ -238,7 +355,20 @@ const MyStall = () => {
           />
           <span className="MyStall-slider"></span>
         </label>
+      <div className="MyStall-notifications">
+        <span>Notifications</span>
+        <label className="MyStall-switch">
+          <input 
+            type="checkbox" 
+            checked={notificationsEnabled} 
+            onChange={toggleNotifications} 
+            aria-label="Toggle notifications"
+          />
+          <span className="MyStall-slider"></span>
+        </label>
       </div>
+      </div>
+
 
       <div className="MyStall-orders-section">
         <h2 className="MyStall-orders-heading">New Orders</h2>
