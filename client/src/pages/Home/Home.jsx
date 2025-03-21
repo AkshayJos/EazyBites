@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import ScrollIndicator from "../../components/ScrollIndicator/ScrollIndicator"; // Import the new component
+import DynamicFloatingImages from "../../components/FloatingImage/FloatingImage";
 
 const DancingSamosa = () => {
   const controls = useAnimation();
@@ -161,8 +162,9 @@ const Home = ({ scrollRef }) => {
           >
             Delicious food, just a bite away.
           </motion.p>
+          <DynamicFloatingImages/>
           
-          <div className="Home-hero-images">
+          {/* <div className="Home-hero-images">
             <div className="Home-floating-image" id="Home-floating-image-1">
               <img src="images/poha.jpg" alt="Food 1" />
             </div>
@@ -178,17 +180,7 @@ const Home = ({ scrollRef }) => {
             <div className="Home-floating-image" id="Home-floating-image-5">
               <img src="images/dosa.jpg" alt="Food 5" />
             </div>
-          </div>
-
-          {/* Fixed position samosa image */}
-          {/* <motion.div 
-            className="Home-samosa-image"
-            initial={{ rotate: -25, scale: 0.8, opacity: 0 }}
-            animate={{ rotate: -25, scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-          >
-            <img src="images/samosa-removebg-preview.png" alt="Food Icon" />
-          </motion.div> */}
+          </div> */}
         </div>
 
         {/* Right Side - Signup Section */}

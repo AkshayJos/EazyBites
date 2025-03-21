@@ -425,3 +425,166 @@
         height: 60px;
     }
 }
+
+/* Update to Home.css for floating images */
+
+/* Hero Section - add more space for image animations */
+.Home-hero-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 50px;
+    min-height: 80vh; /* Increased from 70vh to give more space */
+    background: linear-gradient(135deg, #ff6a1c, #e2342b);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Left Side - adjust to account for expanded image area */
+.Home-hero-left {
+    flex: 1;
+    text-align: left;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px; /* Ensure minimum height for proper layout */
+}
+
+.Home-hero-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.Home-hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+/* Updated Floating Images Container */
+.Home-hero-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+    position: relative;
+    justify-content: flex-start;
+    min-height: 300px; /* Provide space for animations */
+    flex: 1; /* Allow it to grow and take available space */
+}
+
+/* Floating Image - remove the old animation */
+.Home-floating-image {
+    position: relative;
+}
+
+.Home-floating-image img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Add hover effect for the images */
+.Home-floating-image:hover img {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Remove old staggered animation timing since we're using Framer Motion now */
+#Home-floating-image-1,
+#Home-floating-image-2,
+#Home-floating-image-3,
+#Home-floating-image-4,
+#Home-floating-image-5 {
+    animation: none;
+    top: 0;
+}
+
+/* Remove the old keyframes animation */
+@keyframes Home-float {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+/* Responsive Design - updated for the enhanced animations */
+@media (max-width: 992px) {
+    .Home-hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .Home-hero-signup {
+        padding: 25px;
+    }
+    
+    .Home-floating-image img {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .Home-hero-images {
+        min-height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .Home-hero-section {
+        flex-direction: column;
+        padding: 30px 20px;
+        min-height: auto;
+    }
+    
+    .Home-hero-left {
+        text-align: center;
+        margin-bottom: 40px;
+        min-height: 400px;
+    }
+    
+    .Home-hero-images {
+        justify-content: center;
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .Home-hero-title {
+        font-size: 2rem;
+    }
+    
+    .Home-hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .Home-floating-image img {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .Home-hero-left {
+        min-height: 350px;
+    }
+    
+    .Home-hero-images {
+        min-height: 180px;
+    }
+}
+
+@media (max-width: 480px) {
+    .Home-hero-images {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        min-height: 150px;
+    }
+}
