@@ -13,6 +13,7 @@ import EditProfileFoodie from "./pages/Foodie/EditProfile";
 import EditProfileSeller from "./pages/FoodSeller/EditProfile";
 import MyMenu from "./pages/FoodSeller/MyMenu";
 import TermsAndConditions from "./pages/TermsAndConditions/TC";
+import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy"; 
 import MyStall from "./pages/FoodSeller/MyStall";
 import Menu from "./pages/Foodie/Menu";
 
@@ -33,6 +34,7 @@ function App() {
           <Route path="/seller-menu" element={<MyMenu />} />
           <Route path="/my-stall" element={<MyStall />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
         <Footer />
       </Router>

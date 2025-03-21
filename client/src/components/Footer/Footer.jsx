@@ -8,7 +8,7 @@ const Footer = () => {
         <p className="footer-text">&copy; {new Date().getFullYear()} EazyBites. All rights reserved.</p>
         <ul className="footer-links">
           <li><a href="/about" className="footer-link">About</a></li>
-          <li><a href="/privacy" className="footer-link">Privacy Policy</a></li>
+          <li><a href="/privacy-policy" className="footer-link">Privacy Policy</a></li>
         </ul>
       </div>
     </footer>

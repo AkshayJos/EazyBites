@@ -317,9 +317,12 @@ const Signup = () => {
                                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                                 disabled={isVerifying}
                             />
-                            I accept the{" "}
+                            I accept the Both {" "}
                     <Link to="/terms-and-conditions" className="terms-link">
                         Terms and Conditions
+                    </Link>
+                    <Link to="/privacy-policy" className="terms-link">
+                      and Privacy Policy
                     </Link>
                         </label>
                     </div>

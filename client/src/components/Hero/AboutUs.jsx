@@ -7,7 +7,7 @@ const AboutUs = forwardRef((props, ref) => {
   const teamMembers = [
     {
       name: "Abhishek Verma",
-      email: "john@example.com",
+      email: "abhishek@example.com",
       details: "Lorem ipsum dolor sit amet, consectetur",
       image: "/images/Team/AbhishekVerma.jpg",
       linkedin: "#",
@@ -16,7 +16,7 @@ const AboutUs = forwardRef((props, ref) => {
     },
     {
       name: "Anjali Mayda",
-      email: "jane@example.com",
+      email: "anjali@example.com",
       details: "Lorem ipsum dolor sit amet, consectetur",
       image: "/api/placeholder/300/300",
       linkedin: "#",
@@ -25,7 +25,7 @@ const AboutUs = forwardRef((props, ref) => {
     },
     {
       name: "Akshay Kumar Joshi",
-      email: "mike@example.com",
+      email: "akshay@example.com",
       details: "Lorem ipsum dolor sit amet, consectetur",
       image: "/api/placeholder/300/300",
       linkedin: "#",

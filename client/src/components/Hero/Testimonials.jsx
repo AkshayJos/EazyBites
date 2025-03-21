@@ -5,19 +5,19 @@ import "./Testimonials.css"
 const testimonials = [
     {
         id: 1,
-        name: "Sarah Johnson",
+        name: "Aman",
         description: "The service exceeded my expectations. The team was incredibly professional and delivered outstanding results.",
         image: "/images/stalls/stall1.jpg"
     },
     {
         id: 2,
-        name: "Michael Chen",
+        name: "Uday",
         description: "I'm amazed by the quality and attention to detail. Would definitely recommend to anyone looking for excellence.",
         image: "/images/stalls/stall2.jpg"
     },
     {
         id: 3,
-        name: "Emma Williams",
+        name: "Amar",
         description: "Working with this team has been a game-changer for our business. Their expertise is unmatched.",
         image: "/images/stalls/stall3.jpg"
     }
