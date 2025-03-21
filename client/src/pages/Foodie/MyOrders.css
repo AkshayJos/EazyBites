@@ -1,223 +1,637 @@
 /* MyOrders.css */
 
 .MyOrders-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.MyOrders-title {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.MyOrders-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.MyOrders-tab {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: #757575;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.MyOrders-tab:hover {
+  color: #FF5722;
+}
+
+.MyOrders-tab-active {
+  color: #FF5722;
+}
+
+.MyOrders-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #FF5722;
+}
+
+.MyOrders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.MyOrders-loading {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+}
+
+/* Loading state for history tab */
+.MyOrders-loading-history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.MyOrders-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 87, 34, 0.2);
+  border-top-color: #FF5722;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.MyOrders-empty {
+  text-align: center;
+  padding: 50px 0;
+  color: #757575;
+  font-size: 18px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.MyOrders-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.MyOrders-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.MyOrders-card-content {
+  display: flex;
+  padding: 16px;
+}
+
+.MyOrders-card-image-container {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.MyOrders-card-image {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.MyOrders-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.MyOrders-card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  color: #757575;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Carousel styling */
+.MyOrders-carousel {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.MyOrders-carousel-images {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.MyOrders-carousel-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0 0 8px 8px;
+}
+
+.MyOrders-carousel-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.MyOrders-carousel-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.MyOrders-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.MyOrders-carousel-dot.active {
+  background-color: white;
+}
+
+.MyOrders-card-details {
+  padding-left: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.MyOrders-card-title {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.MyOrders-card-seller {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #757575;
+}
+
+.MyOrders-card-info {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #424242;
+}
+
+.MyOrders-card-info p {
+  margin: 5px 0;
+}
+
+.MyOrders-card-status-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.MyOrders-active-order {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.MyOrders-active-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.MyOrders-active-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.MyOrders-active-main-info, 
+.MyOrders-active-time-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.MyOrders-active-main-info p, 
+.MyOrders-active-time-info p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.MyOrders-cancel-button {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background-color: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.MyOrders-cancel-button:hover {
+  background-color: #ff1744;
+}
+
+.MyOrders-cancel-button:disabled {
+  background-color: #ffcdd2;
+  cursor: not-allowed;
+}
+
+.MyOrders-cancel-confirm {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fff3f3;
+  border-radius: 4px;
+  border-left: 3px solid #ff5252;
+}
+
+.MyOrders-cancel-confirm p {
+  margin: 0 0 12px 0;
+  font-weight: 500;
+  color: #D32F2F;
+}
+
+.MyOrders-cancel-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.MyOrders-cancel-yes {
+  padding: 6px 12px;
+  background-color: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.MyOrders-cancel-yes:hover {
+  background-color: #D32F2F;
+}
+
+.MyOrders-cancel-yes:disabled {
+  background-color: #BDBDBD;
+  cursor: wait;
+}
+
+.MyOrders-cancel-no {
+  padding: 6px 12px;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.MyOrders-cancel-no:hover {
+  background-color: #BDBDBD;
+}
+
+.MyOrders-cancel-no:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.MyOrders-card-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* .MyOrders-card-status {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  width: fit-content;
+} */
+
+.MyOrders-card-note,
+.MyOrders-card-completed,
+.MyOrders-card-cancelled {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-top: 1px solid #f0f0f0;
+  color: #424242;
+}
+
+.MyOrders-card-completed {
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+.MyOrders-card-cancelled {
+  background-color: rgba(244, 67, 54, 0.05);
+}
+
+/* Load more button */
+.MyOrders-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.MyOrders-load-more-button {
+  background-color: transparent;
+  border: 1px solid #FF5722;
+  color: #FF5722;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.MyOrders-load-more-button:hover:not(:disabled) {
+  background-color: #FF5722;
+  color: white;
+}
+
+.MyOrders-load-more-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.MyOrders-load-more-loading {
+  display: inline-flex;
+  align-items: center;
+}
+
+.MyOrders-load-more-loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  border: 2px solid transparent;
+  border-top-color: #FF5722;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Active order pulse animation */
+.MyOrders-active-pulse {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .MyOrders-container {
+    padding: 15px;
   }
   
   .MyOrders-title {
-    text-align: center;
-    margin-bottom: 30px;
-    color: #333;
-    font-size: 28px;
-    font-weight: 600;
-  }
-  
-  .MyOrders-tabs {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-    border-bottom: 1px solid #e0e0e0;
+    font-size: 24px;
+    margin-bottom: 20px;
   }
   
   .MyOrders-tab {
-    padding: 12px 24px;
-    background: none;
-    border: none;
-    font-size: 16px;
-    font-weight: 500;
-    color: #757575;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-  }
-  
-  .MyOrders-tab:hover {
-    color: #FF5722;
-  }
-  
-  .MyOrders-tab-active {
-    color: #FF5722;
-  }
-  
-  .MyOrders-tab-active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #FF5722;
-  }
-  
-  .MyOrders-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .MyOrders-loading {
-    display: flex;
-    justify-content: center;
-    padding: 50px 0;
-  }
-  
-  .MyOrders-empty {
-    text-align: center;
-    padding: 50px 0;
-    color: #757575;
-    font-size: 18px;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-  }
-  
-  .MyOrders-card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .MyOrders-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+    font-size: 14px;
   }
   
   .MyOrders-card-content {
-    display: flex;
-    padding: 16px;
-  }
-  
-  .MyOrders-card-image {
-    width: 120px;
-    height: 120px;
-    overflow: hidden;
-    border-radius: 8px;
-    flex-shrink: 0;
-  }
-  
-  .MyOrders-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .MyOrders-card-image-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f5f5f5;
-    color: #757575;
-    font-size: 12px;
-    text-align: center;
-  }
-  
-  .MyOrders-card-details {
-    padding-left: 16px;
-    flex-grow: 1;
-    display: flex;
     flex-direction: column;
   }
   
-  .MyOrders-card-title {
-    margin: 0 0 5px 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .MyOrders-card-seller {
-    margin: 0 0 12px 0;
-    font-size: 14px;
-    color: #757575;
-  }
-  
-  .MyOrders-card-info {
+  .MyOrders-card-image-container {
+    width: 100%;
+    height: 180px;
     margin-bottom: 12px;
-    font-size: 14px;
-    color: #424242;
   }
   
-  .MyOrders-card-info p {
-    margin: 5px 0;
+  .MyOrders-card-details {
+    padding-left: 0;
   }
   
-  .MyOrders-card-status {
-    display: inline-block;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    text-align: center;
-    width: fit-content;
+  .MyOrders-carousel-controls {
+    padding: 8px 5px;
   }
-  
-  .MyOrders-card-note,
-  .MyOrders-card-completed,
-  .MyOrders-card-cancelled {
-    padding: 12px 16px;
-    font-size: 14px;
-    border-top: 1px solid #f0f0f0;
-    color: #424242;
+}
+
+/* Star Rating Component */
+.StarRating-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.StarRating-star {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.StarRating-value {
+  margin-left: 10px;
+  font-weight: 500;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Rating Modal */
+.RatingModal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.RatingModal-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.RatingModal-content h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.RatingModal-stars {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.RatingModal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.RatingModal-cancel {
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.RatingModal-cancel:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.RatingModal-submit {
+  padding: 10px 20px;
+  background-color: #FF5722;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.RatingModal-submit:hover:not(:disabled) {
+  background-color: #E64A19;
+}
+
+.RatingModal-submit:disabled,
+.RatingModal-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Rating Button */
+.MyOrders-rating-button {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background-color: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 152, 0, 0.4);
   }
-  
-  .MyOrders-card-completed {
-    background-color: rgba(76, 175, 80, 0.05);
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.7);
   }
-  
-  .MyOrders-card-cancelled {
-    background-color: rgba(244, 67, 54, 0.05);
-  }
-  
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .MyOrders-container {
-      padding: 15px;
-    }
-    
-    .MyOrders-title {
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-    
-    .MyOrders-tab {
-      padding: 10px 15px;
-      font-size: 14px;
-    }
-    
-    .MyOrders-card-content {
-      flex-direction: column;
-    }
-    
-    .MyOrders-card-image {
-      width: 100%;
-      height: 180px;
-      margin-bottom: 12px;
-    }
-    
-    .MyOrders-card-details {
-      padding-left: 0;
-    }
-  }
-  
-  /* Animation classes for Framer Motion */
-  @keyframes pulse {
-    0% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0.6;
-    }
-  }
-  
-  .MyOrders-active-pulse {
-    animation: pulse 2s infinite ease-in-out;
-  }
+}
+
+.MyOrders-card-rating {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #f0f0f0;
+}
+
+.MyOrders-card-rating-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.MyOrders-card-rating-display p {
+  margin: 0;
+  font-weight: 500;
+  color: #424242;
+}

@@ -119,7 +119,7 @@ const Card = ({ fid }) => {
         <div className="Card-stall">
           <p>Stall: {stallName}</p>
         </div>
-        <p className="Card-description">{description}</p>
+        {/* <p className="Card-description">{description}</p> */}
         <div className="Card-price-order">
           <p className="Card-price">₹{parseFloat(price).toFixed(2)}</p>
           <motion.button 

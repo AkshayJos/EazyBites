@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ref, update, get, onValue } from "firebase/database";
+import { ref, update, get, onValue, remove } from "firebase/database";
 import { doc, updateDoc } from "firebase/firestore";
 import { database, db } from "../../firebaseConfig";
 import { FaCheck, FaTimes, FaClock, FaUtensils, FaCheckCircle, FaHourglassHalf } from "react-icons/fa";
@@ -17,6 +17,17 @@ const OrderCard = ({ order, onStatusChange }) => {
     const sellerTimeoutRef = useRef(null);
     const foodieTimeoutRef = useRef(null);
 
+    // Helper function to cleanup order from Realtime Database
+    const cleanupRealTimeOrder = async (orderId) => {
+        try {
+            const orderRef = ref(database, `orders/${orderId}`);
+            await remove(orderRef);
+            console.log(`Order ${orderId} removed from Realtime Database`);
+        } catch (error) {
+            console.error("Error removing order from Realtime Database:", error);
+        }
+    };
+
     useEffect(() => {
         const orderRef = ref(database, `orders/${order.id}`);
         const unsubscribe = onValue(orderRef, (snapshot) => {
@@ -30,6 +41,11 @@ const OrderCard = ({ order, onStatusChange }) => {
                 if (foodieTimeoutRef.current) {
                     clearTimeout(foodieTimeoutRef.current);
                     foodieTimeoutRef.current = null;
+                }
+                
+                // Check if new status is a terminal status and cleanup from Realtime DB
+                if (["timeoutSeller", "timeoutFoodie", "foodieDeclined", "completed", "rejected", "cancelled"].includes(data.status)) {
+                    cleanupRealTimeOrder(order.id);
                 }
             }
         });
@@ -112,12 +128,15 @@ const OrderCard = ({ order, onStatusChange }) => {
             await updateDoc(doc(db, "users", order.uid, "orders", order.userOrderId), {
                 status: "timeoutSeller"
             });
-            await updateDoc(doc(db, "orders",order.id), {
+            await updateDoc(doc(db, "orders", order.id), {
                 status: "timeoutSeller"
             });
 
             setCurrentStatus("timeoutSeller");
             onStatusChange(order.id, "timeoutSeller");
+            
+            // Clean up from Realtime Database
+            await cleanupRealTimeOrder(order.id);
         } catch (error) {
             console.error("Error handling seller timeout:", error);
         } finally {
@@ -138,12 +157,15 @@ const OrderCard = ({ order, onStatusChange }) => {
             await updateDoc(doc(db, "users", order.uid, "orders", order.userOrderId), {
                 status: "timeoutFoodie"
             });
-            await updateDoc(doc(db, "orders",order.id), {
+            await updateDoc(doc(db, "orders", order.id), {
                 status: "timeoutFoodie"
             });
 
             setCurrentStatus("timeoutFoodie");
             onStatusChange(order.id, "timeoutFoodie");
+            
+            // Clean up from Realtime Database
+            await cleanupRealTimeOrder(order.id);
         } catch (error) {
             console.error("Error handling foodie timeout:", error);
         } finally {
@@ -162,12 +184,15 @@ const OrderCard = ({ order, onStatusChange }) => {
             await updateDoc(doc(db, "users", order.uid, "orders", order.userOrderId), {
                 status: "rejected"
             });
-            await updateDoc(doc(db, "orders",order.id), {
+            await updateDoc(doc(db, "orders", order.id), {
                 status: "rejected"
             });
 
             setCurrentStatus("rejected");
             onStatusChange(order.id, "rejected");
+            
+            // Clean up from Realtime Database
+            await cleanupRealTimeOrder(order.id);
         } catch (error) {
             console.error("Error rejecting order:", error);
         } finally {
@@ -190,7 +215,7 @@ const OrderCard = ({ order, onStatusChange }) => {
                 waitingTime: waitTimeValue,
                 acceptedTimestamp: acceptedTimestamp
             });
-            await updateDoc(doc(db, "orders",order.id), {
+            await updateDoc(doc(db, "orders", order.id), {
                 status: "accepted",
                 waitingTime: waitTimeValue,
                 acceptedTimestamp: acceptedTimestamp
@@ -213,7 +238,7 @@ const OrderCard = ({ order, onStatusChange }) => {
             await updateDoc(doc(db, "users", order.uid, "orders", order.userOrderId), {
                 status: "cooking"
             });
-            await updateDoc(doc(db, "orders",order.id), {
+            await updateDoc(doc(db, "orders", order.id), {
                 status: "cooking"
             });
 
@@ -237,13 +262,16 @@ const OrderCard = ({ order, onStatusChange }) => {
                 status: "completed",
                 completedAt: new Date()
             });
-            await updateDoc(doc(db, "orders",order.id), {
+            await updateDoc(doc(db, "orders", order.id), {
                 status: "completed",
                 completedAt: new Date()
             });
 
             setCurrentStatus("completed");
             onStatusChange(order.id, "completed");
+            
+            // Clean up from Realtime Database
+            await cleanupRealTimeOrder(order.id);
         } catch (error) {
             console.error("Error completing order:", error);
         } finally {

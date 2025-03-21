@@ -1,18 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { db, auth, database } from '../../firebaseConfig';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
-import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { ref, query, orderByChild, equalTo, onValue, off, get, update, remove } from 'firebase/database';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import './MyOrders.css';
 import Loader from '../../components/Loader/Loader';
 import UnauthorizedPage from '../Unauthorized/Unauthorized';
+import { RatingModal, StarRating } from './StarRating';
+
+//API
+const API = process.env.REACT_APP_API;
 
 const MyOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'history'
-  const [foodItems, setFoodItems] = useState({});
+  const [orders, setOrders] = useState({ active: [], history: [] });
+  const [activeTab, setActiveTab] = useState('active');
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
+  const [lastOrderId, setLastOrderId] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     isAuthorized: false,
@@ -20,9 +29,44 @@ const MyOrders = () => {
     userData: null
   });
 
-  const auth = getAuth();
-  const db = getFirestore();
-  const rtdb = getDatabase();
+  // API function for fetching past orders
+  const fetchPastOrders = useCallback(async (userId, lastId = null) => {
+    try {
+      setHistoryLoading(true);
+      
+      // For now, we'll simulate the API response structure
+      const response = await axios.get(`${API}/orders/history/${userId}`, {
+        params: { lastOrderId: lastId || '' }
+      });
+      const data = response.data;
+      
+      // Process the API response
+      const newHistoryOrders = [];
+      
+      for (const [orderId, orderData] of Object.entries(data.orders)) {
+        newHistoryOrders.push({
+          id: orderId,
+          ...orderData,
+          createdAt: orderData.orderTime,
+          // sellerName: orderData.stallName,
+          // totalAmount: orderData.price,
+        });
+      }
+      
+      setOrders(prev => ({
+        ...prev,
+        history: lastId ? [...prev.history, ...newHistoryOrders] : newHistoryOrders
+      }));
+      
+      setHasMoreHistory(data.hasMore);
+      setLastOrderId(data.lastOrderId);
+      setHistoryLoading(false);
+      
+    } catch (error) {
+      console.error("Error fetching past orders:", error);
+      setHistoryLoading(false);
+    }
+  }, []);
 
   // Authentication check
   useEffect(() => {
@@ -91,8 +135,13 @@ const MyOrders = () => {
         });
         setAuthLoading(false);
 
-        // Fetch orders once authentication is confirmed
-        fetchOrders(user.uid);
+        // Fetch active orders directly from RTD
+        setupActiveOrdersListener(user.uid);
+        
+        // Fetch past orders from API
+        if (activeTab === 'history') {
+          fetchPastOrders(user.uid);
+        }
 
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -113,155 +162,151 @@ const MyOrders = () => {
 
     // Cleanup subscription
     return () => unsubscribe();
-  }, []);
+  }, [fetchPastOrders, activeTab]);
 
-  // Fetch orders from user's subcollection to get orderIds
-  const fetchOrders = async (userId) => {
-    try {
-      setLoading(true);
-      
-      const activeOrderStatuses = ['cooking', 'foodieAgreed'];
-      const historyOrderStatuses = ['completed', 'cancelled'];
-      
-      // Get all relevant orders from the user's subcollection
-      const ordersRef = collection(db, `users/${userId}/orders`);
-      const ordersQuery = query(
-        ordersRef,
-        where('status', 'in', [...activeOrderStatuses, ...historyOrderStatuses])
-      );
-      
-      const ordersSnapshot = await getDocs(ordersQuery);
-      const ordersData = ordersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      // Sort orders by creation time (newest first)
-      ordersData.sort((a, b) => b.createdAt - a.createdAt);
-      
-      // Group orders by active vs history
-      const activeOrders = [];
-      const historyOrders = [];
-      
-      for (const order of ordersData) {
-        if (activeOrderStatuses.includes(order.status)) {
-          // For active orders, set up real-time listeners
-          setupRealtimeListener(order.orderId, activeOrders);
-        } else {
-          // For history orders, fetch from Firestore
-          const orderDoc = await getDoc(doc(db, "orders", order.orderId));
-          if (orderDoc.exists()) {
-            const detailedOrder = {
-              id: orderDoc.id,
-              ...orderDoc.data()
-            };
-            historyOrders.push(detailedOrder);
-            
-            // Fetch food item details if not already fetched
-            if (!foodItems[detailedOrder.fid]) {
-              fetchFoodItemDetails(detailedOrder.fid);
-            }
-          }
-        }
-      }
-      
-      setOrders({
-        active: activeOrders,
-        history: historyOrders
-      });
-      setLoading(false);
-      
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setLoading(false);
+  // Fetch history orders when tab changes to history
+  useEffect(() => {
+    if (activeTab === 'history' && authState.isAuthenticated && authState.isAuthorized && !orders.history.length) {
+      fetchPastOrders(auth.currentUser.uid);
     }
-  };
+  }, [activeTab, authState.isAuthenticated, authState.isAuthorized, orders.history.length, fetchPastOrders, auth]);
 
-  // Setup real-time listener for active orders
-  const setupRealtimeListener = (orderId, activeOrdersArray) => {
-    const orderRef = ref(rtdb, `orders/${orderId}`);
+  // Set up real-time listener for active orders directly from RTD
+  const setupActiveOrdersListener = (userId) => {
+    setLoading(true);
     
-    onValue(orderRef, (snapshot) => {
-      const orderData = snapshot.val();
-      if (orderData) {
-        // Update the order in our state
-        setOrders(prevOrders => {
-          const updatedActiveOrders = [...(prevOrders.active || [])];
-          const existingOrderIndex = updatedActiveOrders.findIndex(o => o.id === orderId);
-          
-          const updatedOrder = {
+    // Query active orders where uid matches the current user
+    // This assumes orders in RTD have a uid field matching the user
+    const activeOrdersRef = ref(database, 'orders');
+    const activeOrdersQuery = query(
+      activeOrdersRef, 
+      orderByChild('uid'),
+      equalTo(userId)
+    );
+    
+    onValue(activeOrdersQuery, (snapshot) => {
+      const activeOrdersData = [];
+      
+      snapshot.forEach((childSnapshot) => {
+        const orderData = childSnapshot.val();
+        const orderId = childSnapshot.key;
+        
+        // Only include orders with cooking or foodieAgreed status
+        if (orderData && (orderData.status === 'cooking' || orderData.status === 'foodieAgreed')) {
+          activeOrdersData.push({
             id: orderId,
             ...orderData
-          };
-          
-          if (existingOrderIndex >= 0) {
-            updatedActiveOrders[existingOrderIndex] = updatedOrder;
-          } else {
-            updatedActiveOrders.push(updatedOrder);
-          }
-          
-          // Fetch food item details if needed
-          if (orderData.fid && !foodItems[orderData.fid]) {
-            fetchFoodItemDetails(orderData.fid);
-          }
-          
-          // If order status changed to completed/cancelled, move to history
-          if (['completed', 'cancelled'].includes(orderData.status)) {
-            const newHistoryOrders = [...(prevOrders.history || [])];
-            newHistoryOrders.unshift(updatedOrder);
-            
-            return {
-              active: updatedActiveOrders.filter(o => o.id !== orderId),
-              history: newHistoryOrders
-            };
-          }
-          
-          return {
-            ...prevOrders,
-            active: updatedActiveOrders
-          };
-        });
-      }
+          });
+        }
+      });
+      
+      // Sort by creation time (newest first)
+      activeOrdersData.sort((a, b) => b.createdAt - a.createdAt);
+      
+      setOrders(prev => ({
+        ...prev,
+        active: activeOrdersData
+      }));
+      
+      setLoading(false);
     });
     
     // Return cleanup function
-    return () => off(orderRef);
+    return () => off(activeOrdersQuery);
   };
 
-  // Fetch food item details
-  const fetchFoodItemDetails = async (fid) => {
-    try {
-      const foodItemDoc = await getDoc(doc(db, "foodItems", fid));
-      
-      if (foodItemDoc.exists()) {
-        const foodItemData = {
-          id: foodItemDoc.id,
-          ...foodItemDoc.data()
-        };
-        
-        setFoodItems(prev => ({
-          ...prev,
-          [fid]: foodItemData
-        }));
-      }
+  // Cancel order function
+  const handleCancelOrder = async (orderId) => {
+    if (!auth.currentUser) return;
+  
+  try {
+    setCancelLoading(true);
+    
+    // Get current timestamp
+    const cancelledAt = Date.now();
+    
+    // 1. Update order status in Realtime Database
+    const orderRef = ref(database, `orders/${orderId}`);
+    await update(orderRef, { status: "cancelled" });
+    const orderSnapshot = await get(orderRef);
+    const orderData = orderSnapshot.val();
+    
+    if (!orderData) {
+      throw new Error("Order not found in Realtime Database");
+    }
+    
+    // Get the userOrderId from RTD which references the order document in Firestore
+    const userOrderId = orderData.userOrderId;
+    
+    // 2. Update order in Firestore (orders collection)
+    const orderDocRef = doc(db, "orders", orderId);
+    await updateDoc(orderDocRef, {
+      status: 'cancelled',
+      cancelledAt,
+      cancellationReason: 'Cancelled by user'
+    });
+    
+    // 3. Update order in user's orders subcollection
+    if (userOrderId) {
+      const userOrderRef = doc(db, "users", auth.currentUser.uid, "orders", userOrderId);
+      await updateDoc(userOrderRef, {
+        status: 'cancelled',
+        cancelledAt,
+        cancellationReason: 'Cancelled by user'
+      });
+    }
+    
+    // 4. Finally delete the order from Realtime Database after updating all references
+    await remove(orderRef);
+    
+    setCancelLoading(false);
     } catch (error) {
-      console.error("Error fetching food item details:", error);
+      console.error("Error cancelling order:", error);
+      setCancelLoading(false);
     }
   };
   
-  // Cleanup real-time listeners when component unmounts
+  // Cleanup real-time listener when component unmounts
   useEffect(() => {
     return () => {
-      orders?.active?.forEach(order => {
-        const orderRef = ref(rtdb, `orders/${order.id}`);
-        off(orderRef);
-      });
+      if (auth.currentUser) {
+        const activeOrdersRef = ref(database, 'orders');
+        const activeOrdersQuery = query(
+          activeOrdersRef, 
+          orderByChild('uid'),
+          equalTo(auth.currentUser.uid)
+        );
+        off(activeOrdersQuery);
+      }
     };
-  }, [orders]);
+  }, [auth, database]);
+
+  // Handle load more history orders
+  const handleLoadMoreHistory = () => {
+    if (hasMoreHistory && !historyLoading && lastOrderId) {
+      fetchPastOrders(auth.currentUser.uid, lastOrderId);
+    }
+  };
 
   // Get formatted date string
   const formatDate = (timestamp) => {
     if (!timestamp) return "N/A";
+    
+    // Handle Firestore timestamp objects
+    if (timestamp._seconds !== undefined && timestamp._nanoseconds !== undefined) {
+      // Convert to milliseconds
+      const milliseconds = timestamp._seconds * 1000 + Math.floor(timestamp._nanoseconds / 1000000);
+      const date = new Date(milliseconds);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Handle regular JavaScript timestamps
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -311,62 +356,148 @@ const MyOrders = () => {
         </button>
       </div>
       
-      {loading ? (
-        <div className="MyOrders-loading">
-          <Loader />
-        </div>
-      ) : (
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="MyOrders-list"
-          >
-            {activeTab === 'active' && (
-              (orders.active && orders.active.length > 0) ? (
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="MyOrders-list"
+        >
+          {activeTab === 'active' && (
+            loading ? (
+              <div className="MyOrders-loading">
+                <Loader />
+              </div>
+            ) : (
+              orders.active && orders.active.length > 0 ? (
                 orders.active.map(order => (
                   <OrderCard 
                     key={order.id} 
-                    order={order} 
-                    foodItem={foodItems[order.fid]} 
+                    order={order}
                     formatDate={formatDate}
                     getStatusInfo={getStatusInfo}
+                    isActiveOrder={true}
+                    onCancelOrder={handleCancelOrder}
+                    cancelLoading={cancelLoading}
                   />
                 ))
               ) : (
                 <div className="MyOrders-empty">No active orders found</div>
               )
-            )}
-            
-            {activeTab === 'history' && (
-              (orders.history && orders.history.length > 0) ? (
-                orders.history.map(order => (
-                  <OrderCard 
-                    key={order.id} 
-                    order={order} 
-                    foodItem={foodItems[order.fid]} 
-                    formatDate={formatDate}
-                    getStatusInfo={getStatusInfo}
-                  />
-                ))
+            )
+          )}
+          
+          {activeTab === 'history' && (
+            <>
+              {orders.history && orders.history.length > 0 ? (
+                <>
+                  {orders.history.map(order => (
+                    <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      foodItem={order.foodItem ? { name: order.foodItem } : null}
+                      formatDate={formatDate}
+                      getStatusInfo={getStatusInfo}
+                      images={order.photoURL}
+                      isActiveOrder={false}
+                    />
+                  ))}
+                  
+                  {hasMoreHistory && (
+                    <div className="MyOrders-load-more">
+                      <button 
+                        className="MyOrders-load-more-button"
+                        onClick={handleLoadMoreHistory}
+                        disabled={historyLoading}
+                      >
+                        {historyLoading ? (
+                          <span className="MyOrders-load-more-loading">
+                            Loading more...
+                          </span>
+                        ) : (
+                          "Load More Orders"
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="MyOrders-empty">No order history found</div>
-              )
-            )}
-          </motion.div>
-        </AnimatePresence>
-      )}
+                historyLoading ? (
+                  <motion.div 
+                    className="MyOrders-loading-history"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="MyOrders-loading-spinner"></div>
+                    <p>Loading your order history...</p>
+                  </motion.div>
+                ) : (
+                  <div className="MyOrders-empty">No order history found</div>
+                )
+              )}
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
 
-// Order Card Component
-const OrderCard = ({ order, foodItem, formatDate, getStatusInfo }) => {
+// Order Card Component with Image Carousel
+// Order Card Component with different handling for active orders vs history orders
+const OrderCard = ({ order, foodItem, formatDate, getStatusInfo, images, isActiveOrder, onCancelOrder, cancelLoading }) => {
   const { text: statusText, color: statusColor } = getStatusInfo(order.status);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   
+  // For history orders that come from API and have multiple images
+  const hasMultipleImages = !isActiveOrder && order.photoURL && order.photoURL.length > 1;
+  
+  const nextImage = () => {
+    if (hasMultipleImages) {
+      setActiveImageIndex(prev => (prev + 1) % order.photoURL.length);
+    }
+  };
+  
+  const prevImage = () => {
+    if (hasMultipleImages) {
+      setActiveImageIndex(prev => (prev - 1 + order.photoURL.length) % order.photoURL.length);
+    }
+  };
+
+  // Show cancel confirmation
+  const handleCancelClick = () => {
+    setShowCancelConfirm(true);
+  };
+
+  // Confirm cancellation
+  const handleConfirmCancel = () => {
+    onCancelOrder(order.id);
+    setShowCancelConfirm(false);
+  };
+
+  // Cancel the cancellation
+  const handleCancelCancel = () => {
+    setShowCancelConfirm(false);
+  };
+
+  // Open rating modal
+  const handleRateClick = () => {
+    setShowRatingModal(true);
+  };
+  
+  // Handle rating submission
+  const handleRatingSubmit = (rating) => {
+    // We'll let the modal handle the actual submission
+    // This is just for state updates if needed
+    console.log(`Order ${order.id} rated: ${rating}`);
+  };
+  
+  // Render different card layouts based on active vs history
   return (
     <motion.div 
       className="MyOrders-card"
@@ -374,54 +505,195 @@ const OrderCard = ({ order, foodItem, formatDate, getStatusInfo }) => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="MyOrders-card-content">
-        <div className="MyOrders-card-image">
-          {foodItem?.imageUrl ? (
-            <img src={foodItem.imageUrl} alt={foodItem?.name || "Food item"} />
-          ) : (
-            <div className="MyOrders-card-image-placeholder">
-              <span>Image Loading...</span>
+      {isActiveOrder ? (
+        // Active Order Card - RTD data structure
+        <div className="MyOrders-card-content">
+          <div className="MyOrders-active-order">
+            <div className="MyOrders-active-header">
+              <h3 className="MyOrders-card-title">
+                {order.itemName || foodItem?.name || "Loading..."}
+              </h3>
+              <div 
+                className="MyOrders-card-status"
+                style={{ backgroundColor: statusColor + '20', color: statusColor }}
+              >
+                {statusText}
+              </div>
             </div>
+            
+            <div className="MyOrders-active-details">
+              <div className="MyOrders-active-main-info">
+                <p className="MyOrders-card-seller">
+                  <strong>Seller:</strong> {order.stallName || "Unknown"}
+                </p>
+                <p><strong>Token:</strong> {order.token || "N/A"}</p>
+                <p><strong>Quantity:</strong> {order.quantity || 0}</p>
+                <p><strong>Price:</strong> ₹{order.totalCost || 0}</p>
+              </div>
+              
+              <div className="MyOrders-active-time-info">
+                <p><strong>Created:</strong> {formatDate(order.timestamp)}</p>
+                {order.acceptedTimestamp && (
+                  <p><strong>Accepted:</strong> {formatDate(new Date(order.acceptedTimestamp).getTime())}</p>
+                )}
+                <p><strong>Est. Wait Time:</strong> {order.waitingTime || "N/A"} mins</p>
+              </div>
+            </div>
+            
+            {/* Cancel button only for foodieAgreed status */}
+            {order.status === 'foodieAgreed' && !showCancelConfirm && (
+              <button 
+                className="MyOrders-cancel-button"
+                onClick={handleCancelClick}
+                disabled={cancelLoading}
+              >
+                Cancel Order
+              </button>
+            )}
+
+            {/* Cancel confirmation dialog */}
+            {showCancelConfirm && (
+              <div className="MyOrders-cancel-confirm">
+                <p>Are you sure you want to cancel this order?</p>
+                <div className="MyOrders-cancel-actions">
+                  <button 
+                    className="MyOrders-cancel-yes"
+                    onClick={handleConfirmCancel}
+                    disabled={cancelLoading}
+                  >
+                    {cancelLoading ? 'Cancelling...' : 'Yes, Cancel'}
+                  </button>
+                  <button 
+                    className="MyOrders-cancel-no"
+                    onClick={handleCancelCancel}
+                    disabled={cancelLoading}
+                  >
+                    No, Keep Order
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        // History Order Card - API data structure
+        <div className="MyOrders-card-content">
+          <div className="MyOrders-card-image-container">
+            {/* Image carousel for history orders with multiple images */}
+            {hasMultipleImages ? (
+              <div className="MyOrders-carousel">
+                <div className="MyOrders-carousel-images">
+                  <img 
+                    src={order.photoURL[activeImageIndex]} 
+                    alt={order.foodItem || "Food item"} 
+                    className="MyOrders-card-image"
+                  />
+                </div>
+                <div className="MyOrders-carousel-controls">
+                  <button onClick={prevImage} className="MyOrders-carousel-button">
+                    &#8249;
+                  </button>
+                  <div className="MyOrders-carousel-dots">
+                    {order.photoURL.map((_, index) => (
+                      <span 
+                        key={index} 
+                        className={`MyOrders-carousel-dot ${index === activeImageIndex ? 'active' : ''}`}
+                        onClick={() => setActiveImageIndex(index)}
+                      />
+                    ))}
+                  </div>
+                  <button onClick={nextImage} className="MyOrders-carousel-button">
+                    &#8250;
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="MyOrders-card-image">
+                {order.photoURL && order.photoURL.length > 0 ? (
+                  <img src={order.photoURL[0]} alt={order.foodItem || "Food item"} />
+                ) : (
+                  <div className="MyOrders-card-image-placeholder">
+                    <span>No Image Available</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="MyOrders-card-details">
+            <h3 className="MyOrders-card-title">
+              {order.foodItem || "Order Item"}
+            </h3>
+            
+            <p className="MyOrders-card-seller">
+              Seller: {order.stallName || "Unknown"}
+            </p>
+            
+            <div className="MyOrders-card-info">
+              <p>Quantity: {order.quantity || 0}</p>
+              <p>Price: ₹{order.price || 0}</p>
+              <p>Ordered on: {formatDate(order.orderTime)}</p>
+            </div>
+            
+            <div className="MyOrders-card-status-container">
+              <div 
+                className="MyOrders-card-status"
+                style={{ backgroundColor: statusColor + '20', color: statusColor }}
+              >
+                {statusText}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isActiveOrder && order.status === 'completed' && (
+        <div className="MyOrders-card-rating">
+          {order.rating ? (
+            <div className="MyOrders-card-rating-display">
+              <p>Your Rating:</p>
+              <StarRating initialRating={order.rating} readOnly={true} />
+            </div>
+          ) : (
+            <motion.button 
+              className="MyOrders-rating-button"
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05, backgroundColor: "#FF5722" }}
+              onClick={handleRateClick}
+            >
+              Rate Now
+            </motion.button>
           )}
         </div>
-        
-        <div className="MyOrders-card-details">
-          <h3 className="MyOrders-card-title">
-            {foodItem?.name || "Loading..."}
-          </h3>
-          
-          <p className="MyOrders-card-seller">
-            Seller: {order.sellerName || "Unknown"}
-          </p>
-          
-          <div className="MyOrders-card-info">
-            <p>Quantity: {order.quantity || 0}</p>
-            <p>Price: ₹{order.totalAmount || 0}</p>
-            <p>Ordered on: {formatDate(order.createdAt)}</p>
-          </div>
-          
-          <div 
-            className="MyOrders-card-status"
-            style={{ backgroundColor: statusColor + '20', color: statusColor }}
-          >
-            {statusText}
-          </div>
-        </div>
-      </div>
+      )}
       
+      {/* Rating Modal */}
+      <AnimatePresence>
+        {showRatingModal && (
+          <RatingModal 
+            order={order} 
+            onClose={() => setShowRatingModal(false)} 
+            onRatingSubmit={handleRatingSubmit}
+          />
+        )}
+      </AnimatePresence>
+      
+      {/* Additional information common to both active and history orders */}
       {order.note && (
         <div className="MyOrders-card-note">
           <p><strong>Note:</strong> {order.note}</p>
         </div>
       )}
       
-      {order.status === 'completed' && order.completedAt && (
+      {/* Completion information */}
+      {!isActiveOrder && order.status === 'completed' && order.completedAt && (
         <div className="MyOrders-card-completed">
           <p>Completed on: {formatDate(order.completedAt)}</p>
         </div>
       )}
       
-      {order.status === 'cancelled' && order.cancelledAt && (
+      {/* Cancellation information */}
+      {!isActiveOrder && order.status === 'cancelled' && order.cancelledAt && (
         <div className="MyOrders-card-cancelled">
           <p>Cancelled on: {formatDate(order.cancelledAt)}</p>
           {order.cancellationReason && (

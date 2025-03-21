@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
-import { ref, set, update, onValue, off } from 'firebase/database';
+import { ref, set, update, onValue, off, remove } from 'firebase/database';
 import { auth, db, database } from '../../firebaseConfig';
 import Loader from '../../components/Loader/Loader';
 import UnauthorizedPage from '../Unauthorized/Unauthorized';
@@ -213,7 +213,8 @@ const Order = () => {
 
             const userOrderRef = await addDoc(collection(db, `users/${auth.currentUser.uid}/orders`), {
                 orderId: newOrderDoc.id,
-                status: ORDER_STATUS.CREATED
+                status: ORDER_STATUS.CREATED,
+                timestamp: new Date()
             });
 
             const userOrderId = userOrderRef.id;
@@ -279,6 +280,13 @@ const Order = () => {
             });
 
             if (!agreed) {
+                try {
+                    const orderRef = ref(database, `orders/${currentOrderIds.globalOrderId}`);
+                    await remove(orderRef);
+                    console.log(`Order ${currentOrderIds.globalOrderId} removed from Realtime Database after decline`);
+                } catch (error) {
+                    console.error("Error removing declined order from Realtime Database:", error);
+                }
                 setShowModal(false);
                 navigate('/menu');
             }
