@@ -18,11 +18,13 @@ app.use(express.urlencoded({extended: true}));
 const userRoutes = require("./routes/users");
 const sellerMenuRoutes = require("./routes/sellerMenu");
 const foodRoutes = require("./routes/food");
+const orderRoutes = require("./routes/orders");
 
 // Use routes
 app.use("/users", userRoutes);
 app.use("/seller", sellerMenuRoutes);
 app.use("/food", foodRoutes);
+app.use("/orders", orderRoutes);
 
 // Export API
 exports.api = onRequest(app);

@@ -63,4 +63,30 @@
       grid-template-columns: repeat(2, 1fr); /* Ensures at least 2 items per row on mobile */
     }
   }
+
+  .Menu-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .loading-text {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #666;
+  }
+  
+  .loading-dots {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .dot {
+    margin: 0 0.5rem;
+    font-size: 1.5rem;
+    color: #ff6b00; 
+  }
   

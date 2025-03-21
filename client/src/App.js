@@ -16,6 +16,8 @@ import TermsAndConditions from "./pages/TermsAndConditions/TC";
 import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy"; 
 import MyStall from "./pages/FoodSeller/MyStall";
 import Menu from "./pages/Foodie/Menu";
+import Order from "./pages/Order/Order";
+import MyOrders from "./pages/Foodie/MyOrders";
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
           <Route path="/seller-menu" element={<MyMenu />} />
           <Route path="/my-stall" element={<MyStall />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/order" element={<Order />} />
+          <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
         <Footer />

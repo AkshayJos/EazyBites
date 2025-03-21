@@ -168,7 +168,7 @@ const Foodie = () => {
                     whileHover="hover"
                     onClick={() => {
                         if (auth.currentUser) {
-                           navigate(`/foodie-edit-profile?uid=${auth.currentUser.uid}`);
+                           navigate(`/foodie-edit-profile`);
                         }
                     }}
                 >

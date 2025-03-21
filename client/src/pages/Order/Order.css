@@ -1,0 +1,306 @@
+/* Order.css - Contains all styles for the Order component and modals */
+
+.Order-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+    position: relative;
+}
+
+.Order-content {
+    display: flex;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.Order-image-gallery {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+.Order-image {
+    max-width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.Order-details {
+    flex: 1;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.Order-name {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: #333;
+    font-weight: bold;
+}
+
+.Order-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.Order-description {
+    margin-bottom: 20px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.Order-purchase-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.Order-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.Order-quantity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.Order-quantity-btn {
+    width: 40px;
+    height: 40px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.Order-quantity-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.Order-quantity-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.Order-place-button {
+    width: 100%;
+    padding: 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Order Modal Styles */
+.Order-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.Order-modal {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.Order-modal-title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.Order-modal-message {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.Order-modal-submessage {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.Order-timer-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.Order-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.Order-modal-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.Order-modal-btn-agree {
+    background-color: #28a745;
+    color: white;
+}
+
+.Order-modal-btn-agree:hover {
+    background-color: #218838;
+}
+
+.Order-modal-btn-decline {
+    background-color: #dc3545;
+    color: white;
+}
+
+.Order-modal-btn-decline:hover {
+    background-color: #c82333;
+}
+
+.Order-modal-btn-close {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 30px;
+    margin-top: 15px;
+}
+
+.Order-modal-btn-close:hover {
+    background-color: #0069d9;
+}
+
+.Order-token-container {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.Order-token-label {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.Order-token-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.Order-wait-time {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.Order-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.5rem;
+    color: #dc3545;
+}
+
+/* Countdown Timer Styles */
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #f44336;
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.timer-circle {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .Order-content {
+        flex-direction: column;
+    }
+
+    .Order-image-gallery,
+    .Order-details {
+        flex: auto;
+        width: 100%;
+    }
+
+    .Order-name {
+        font-size: 2rem;
+    }
+
+    .Order-details {
+        padding: 20px;
+    }
+
+    .Order-modal {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .Order-modal-title {
+        font-size: 1.5rem;
+    }
+
+    .Order-modal-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .Order-modal-btn {
+        width: 100%;
+    }
+}
