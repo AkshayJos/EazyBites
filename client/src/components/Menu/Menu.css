@@ -1,78 +1,298 @@
-/* Menu.css */
-
 .Menu-section {
-    padding: 80px 0;
-    background-color: #fff8f5;
-    scroll-margin-top: 80px;
+  padding: 80px 0;
+  background-color: #fff8f5;
+  scroll-margin-top: 80px;
+}
+
+.Menu-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.Menu-title {
+  font-size: 3rem;
+  color: #ff6a1c;
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.Menu-title::after {
+  content: "";
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background-color: #ff6a1c;
+  border-radius: 2px;
+}
+
+.Menu-content {
+  min-height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 5px 0;
+}
+
+/* Carousel Styles */
+.Menu-carousel-container {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  perspective: 1200px;
+  min-height: 320px;
+}
+
+.Menu-carousel {
+  width: 100%;
+  height: 320px;
+  position: relative;
+  transform-style: preserve-3d;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+}
+
+.Menu-card-wrapper {
+  position: absolute;
+  cursor: pointer;
+  width: 240px;
+  height: 300px;
+  transition: box-shadow 0.3s ease;
+  overflow: visible;
+  transform-style: preserve-3d;
+  pointer-events: auto;
+}
+
+.Menu-card-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+  background-color: white;
+}
+
+.Menu-card-wrapper:hover .Menu-card-container {
+  box-shadow: 0 12px 25px rgba(255, 106, 28, 0.3);
+}
+
+.Menu-card-center .Menu-card-container {
+  box-shadow: 0 12px 30px rgba(255, 106, 28, 0.4);
+}
+
+/* Make sure the Card component fills its container */
+.Menu-card-container > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* Navigation Arrows */
+.Menu-arrow {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: white;
+  border: none;
+  color: #ff6a1c;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: absolute;
+  z-index: 30;
+}
+
+.Menu-arrow:hover {
+  background-color: #ff6a1c;
+  color: white;
+  transform: scale(1.1);
+}
+
+.Menu-arrow-left {
+  left: 10px;
+}
+
+.Menu-arrow-right {
+  right: 10px;
+}
+
+/* View All Button */
+.Menu-view-all-container {
+  margin-top: 10px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.Menu-view-all-button {
+  padding: 14px 30px;
+  background-color: #ff6a1c;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(255, 106, 28, 0.3);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.Menu-view-all-button:hover {
+  background-color: #e55a0e;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(255, 106, 28, 0.4);
+}
+
+/* Loading and Error States */
+.Menu-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.Menu-loader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 106, 28, 0.2);
+  border-left-color: #ff6a1c;
+  border-radius: 50%;
+  animation: spinner 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.Menu-error {
+  text-align: center;
+  padding: 40px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.Menu-retry-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #ff6a1c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Menu-retry-button:hover {
+  background-color: #e55a0e;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .Menu-carousel {
+    height: 300px;
   }
   
-  .Menu-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+  .Menu-card-wrapper {
+    width: 220px;
+    height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .Menu-section {
+    padding: 60px 0;
   }
   
   .Menu-title {
-    font-size: 3rem;
-    color: #ff6a1c;
-    text-align: center;
-    margin-bottom: 40px;
-    position: relative;
+    font-size: 2.5rem;
   }
   
-  .Menu-title::after {
-    content: "";
-    position: absolute;
-    bottom: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
-    background-color: #ff6a1c;
-    border-radius: 2px;
+  .Menu-carousel {
+    height: 280px;
   }
   
-  .Menu-content {
-    min-height: 300px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .Menu-card-wrapper {
+    width: 200px;
+    height: 260px;
   }
   
-  .Menu-placeholder-text {
+  .Menu-arrow {
+    width: 40px;
+    height: 40px;
     font-size: 1.2rem;
-    color: #888;
-    text-align: center;
-    padding: 40px;
-    border: 2px dashed #ddd;
-    border-radius: 10px;
-    background-color: #fff;
-    width: 100%;
-    max-width: 600px;
   }
   
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .Menu-section {
-      padding: 60px 0;
-    }
-    
-    .Menu-title {
-      font-size: 2.5rem;
-    }
+  /* Handle horizontal spacing for smaller screens */
+  .Menu-content {
+    min-height: 350px;
+  }
+}
+
+@media (max-width: 576px) {
+  .Menu-section {
+    padding: 40px 0;
   }
   
-  @media (max-width: 576px) {
-    .Menu-section {
-      padding: 40px 0;
-    }
-    
-    .Menu-title {
-      font-size: 2rem;
-    }
-    
-    .Menu-placeholder-text {
-      font-size: 1rem;
-      padding: 20px;
-    }
+  .Menu-title {
+    font-size: 2rem;
   }
+  
+  .Menu-carousel {
+    height: 240px;
+  }
+  
+  .Menu-card-wrapper {
+    width: 180px;
+    height: 220px;
+  }
+  
+  .Menu-arrow {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+  
+  .Menu-view-all-button {
+    padding: 10px 25px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .Menu-carousel {
+    height: 220px;
+  }
+  
+  .Menu-card-wrapper {
+    width: 160px;
+    height: 200px;
+  }
+  
+  .Menu-arrow-left {
+    left: 5px;
+  }
+  
+  .Menu-arrow-right {
+    right: 5px;
+  }
+}

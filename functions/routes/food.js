@@ -6,7 +6,7 @@ const router = express.Router();
 const {getFirestore} = require("firebase-admin/firestore");
 const db = getFirestore();
 
-// Fetches paginated food items
+// Fetches paginated food items (For Menu)
 router.get("/foodItems", async (req, res) => {
   try {
     // Get limit parameter with default value of 10
