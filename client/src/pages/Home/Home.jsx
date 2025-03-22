@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import ScrollIndicator from "../../components/ScrollIndicator/ScrollIndicator"; // Import the new component
-import DynamicFloatingImages from "../../components/FloatingImage/FloatingImage";
+import FloatingImages from "../../components/FloatingImage/FloatingImage";
 
 const DancingSamosa = () => {
   const controls = useAnimation();
@@ -135,8 +135,11 @@ const Home = ({ scrollRef }) => {
   };
 
   const handleScrollDown = () => {
-    // Dispatch custom event for scrolling that Landing.jsx listens for
-    window.dispatchEvent(new CustomEvent("scrollToAbout"));
+    if (scrollRef && scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.dispatchEvent(new CustomEvent("scrollToMenu"));
+    }
   };
 
   return (
@@ -162,25 +165,7 @@ const Home = ({ scrollRef }) => {
           >
             Delicious food, just a bite away.
           </motion.p>
-          <DynamicFloatingImages/>
-          
-          {/* <div className="Home-hero-images">
-            <div className="Home-floating-image" id="Home-floating-image-1">
-              <img src="images/poha.jpg" alt="Food 1" />
-            </div>
-            <div className="Home-floating-image" id="Home-floating-image-2">
-              <img src="images/momos.jpg" alt="Food 2" />
-            </div>
-            <div className="Home-floating-image" id="Home-floating-image-3">
-              <img src="images/noodles.jpg" alt="Food 3" />
-            </div>
-            <div className="Home-floating-image" id="Home-floating-image-4">
-              <img src="images/idli.jpg" alt="Food 4" />
-            </div>
-            <div className="Home-floating-image" id="Home-floating-image-5">
-              <img src="images/dosa.jpg" alt="Food 5" />
-            </div>
-          </div> */}
+          <FloatingImages/>
         </div>
 
         {/* Right Side - Signup Section */}
@@ -218,7 +203,7 @@ const Home = ({ scrollRef }) => {
           animate={{ opacity: 1, y: 0 }}
           className="Home-testimonials-title"
         >
-          Testimonials
+          Our Testimonials
         </motion.h2>
 
         <div className="Home-testimonials-container">
@@ -283,8 +268,8 @@ const Home = ({ scrollRef }) => {
         </div>
       </section>
 
-      {/* Placeholder ref for future section */}
-      <div ref={scrollRef} className="Home-future-section-placeholder"></div>
+      {/* Placeholder ref for future section
+      <div ref={scrollRef} className="Home-future-section-placeholder"></div> */}
     </>
   );
 };

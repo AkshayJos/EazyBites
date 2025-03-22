@@ -11,7 +11,7 @@ const ScrollIndicator = ({ onClick }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.8 }}
     >
-      <div className="scroll-text">Scroll Down</div>
+      {/* <div className="scroll-text">Scroll Down</div> */}
       <motion.div 
         className="scroll-icon-container"
         animate={{ y: [0, 8, 0] }}

@@ -54,7 +54,7 @@ const Navbar = () => {
   };
 
   const handleAboutUsClick = () => {
-    navigateAndScroll('/', 'about-us-section');
+    navigateAndScroll('/', 'Menu');
   };
 
   return (
@@ -81,7 +81,7 @@ const Navbar = () => {
         ) : (
           <>
             <button className="nav-button" onClick={handleAboutUsClick}>
-              About Us
+              Our Menu
             </button>
             <button className="nav-button" onClick={() => navigate("/login")}>Login</button>
           </>

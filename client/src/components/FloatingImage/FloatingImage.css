@@ -1,4 +1,119 @@
-.floating-image img {
+/* FloatingImage.css */
+
+.floating-images-container {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  margin-top: 20px;
+  overflow: hidden;
+  max-width: 800px;
+}
+
+.floating-image {
+  position: absolute;
+  z-index: 1;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: filter 0.3s ease;
+}
+
+.floating-image:hover {
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+  z-index: 10;
+}
+
+.floating-image-item {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+.floating-image:hover .floating-image-item {
+  box-shadow: 0 8px 20px rgba(255, 106, 28, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 1200px) {
+  .floating-images-container {
+    max-width: 650px;
+  }
+
+  .floating-image-item {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 992px) {
+  .floating-images-container {
+    max-width: 550px;
+    height: 300px;
+  }
+  
+  .floating-image-item {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-images-container {
+    height: 200px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .floating-image {
+    position: relative;
+    top: unset !important;
+    left: unset !important;
+    margin: 0 5px;
+  }
+  
+  .floating-image-item {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 576px) {
+  .floating-images-container {
+    height: 180px;
+  }
+  
+  .floating-image-item {
+    width: 65px;
+    height: 65px;
+    border-width: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-images-container {
+    height: 100px;
+    padding: 0 10px;
+  }
+  
+  .floating-image-item {
+    width: 65px;
+    height: 65px;
+  }
+  
+  /* For very small screens, show only the first 3 images */
+  .floating-image:nth-child(n+4) {
+    display: none;
+  }
+}
+
+/* .floating-image img {
     width: 90px;
     height: 90px;
     border-radius: 50%;
@@ -11,4 +126,4 @@
   .floating-image img:hover {
     transform: scale(1.1);
   }
-  
+   */

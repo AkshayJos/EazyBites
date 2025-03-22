@@ -32,65 +32,6 @@
     margin-bottom: 20px;
 }
 
-.Home-hero-images {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 20px;
-    position: relative;
-    justify-content: flex-start;
-}
-
-/* Floating Image */
-.Home-floating-image {
-    position: relative;
-    animation: Home-float 6s ease-in-out infinite;
-}
-
-.Home-floating-image img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Staggered animation timing */
-#Home-floating-image-1 {
-    animation-delay: 0s;
-}
-
-#Home-floating-image-2 {
-    animation-delay: 1s;
-    top: 30px;
-}
-
-#Home-floating-image-3 {
-    animation-delay: 2s;
-}
-
-#Home-floating-image-4 {
-    animation-delay: 1.5s;
-    top: 30px;
-}
-
-#Home-floating-image-5 {
-    animation-delay: 0.5s;
-}
-
-@keyframes Home-float {
-    0% {
-        transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-10px) rotate(2deg);
-    }
-    100% {
-        transform: translateY(0px) rotate(0deg);
-    }
-}
-
 /* New Samosa Image Styling */
 .Home-samosa-image {
     position: fixed;
@@ -109,7 +50,7 @@
 /* Right Side - Signup Section */
 .Home-hero-signup {
     flex: 1;
-    max-width: 400px;
+    max-width: 800px;
     padding: 30px;
     margin-left: 20px;
     text-align: center;
@@ -171,11 +112,24 @@
 }
 
 .Home-testimonials-title {
+    font-size: 3rem;
+    color: #ff6a1c;
     text-align: center;
-    font-size: 2.5rem;
     margin-bottom: 40px;
-    color: #333;
-}
+    position: relative;
+  }
+  
+  .Home-testimonials-title::after {
+    content: "";
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: #ff6a1c;
+    border-radius: 2px;
+  }
 
 .Home-testimonials-container {
     max-width: 800px;
@@ -424,6 +378,10 @@
         width: 60px;
         height: 60px;
     }
+
+    .Home-hero-signup h2 {
+        margin-bottom: 5px;
+    }
 }
 
 /* Update to Home.css for floating images */
@@ -585,6 +543,10 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
-        min-height: 150px;
+        min-height: 200px;
+    }
+
+    .Home-hero-left {
+        min-height: 100px;
     }
 }

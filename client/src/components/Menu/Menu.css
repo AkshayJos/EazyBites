@@ -1,0 +1,78 @@
+/* Menu.css */
+
+.Menu-section {
+    padding: 80px 0;
+    background-color: #fff8f5;
+    scroll-margin-top: 80px;
+  }
+  
+  .Menu-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .Menu-title {
+    font-size: 3rem;
+    color: #ff6a1c;
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  
+  .Menu-title::after {
+    content: "";
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: #ff6a1c;
+    border-radius: 2px;
+  }
+  
+  .Menu-content {
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .Menu-placeholder-text {
+    font-size: 1.2rem;
+    color: #888;
+    text-align: center;
+    padding: 40px;
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    background-color: #fff;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .Menu-section {
+      padding: 60px 0;
+    }
+    
+    .Menu-title {
+      font-size: 2.5rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .Menu-section {
+      padding: 40px 0;
+    }
+    
+    .Menu-title {
+      font-size: 2rem;
+    }
+    
+    .Menu-placeholder-text {
+      font-size: 1rem;
+      padding: 20px;
+    }
+  }
