@@ -63,7 +63,7 @@ const Navbar = () => {
         <img src="images/EazyBites.png" className="nav-name" alt="logo" onClick={handleLogoClick} style={{ cursor: "pointer" }} />
       </div>
       <div className="nav-center" >
-        <img src="final_logo.png" alt="Logo" className="nav-logo" onClick={handleLogoClick} style={{ cursor: "pointer" }} />
+        <img src="logo.png" alt="Logo" className="nav-logo" onClick={handleLogoClick} style={{ cursor: "pointer" }} />
       </div>
       <div className="nav-right">
         {user ? (

@@ -48,6 +48,7 @@
   align-items: center;
   perspective: 1200px;
   min-height: 320px;
+  overflow: hidden;
 }
 
 .Menu-carousel {

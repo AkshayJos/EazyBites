@@ -255,3 +255,100 @@
 .Edit-Foodie-otp-container {
   margin-top: 15px;
 }
+
+/* Adding styles for the phone verification section */
+.Edit-Foodie-phone-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+.Edit-Foodie-verify-btn {
+  background-color: #4285f4;
+  color: white;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: 120px;
+  font-weight: 600;
+}
+
+.Edit-Foodie-verify-btn:hover:not(:disabled) {
+  background-color: #357ae8;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.Edit-Foodie-verify-btn:disabled {
+  background-color: #a4a4a4;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.Edit-Foodie-verify-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* OTP section styles */
+.Edit-Foodie-otp-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+}
+
+/* Loading indicator for buttons */
+.Edit-Foodie-btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.Edit-Foodie-btn-loading:after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  border: 3px solid transparent;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: button-loading-spinner 1s ease infinite;
+}
+
+@keyframes button-loading-spinner {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+  .Edit-Foodie-phone-section,
+  .Edit-Foodie-otp-section {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  
+  .Edit-Foodie-verify-btn {
+    width: 100%;
+    padding: 0.85rem 1rem;
+  }
+  
+  .Edit-Foodie-phone-container {
+    width: 100%;
+  }
+}

@@ -44,6 +44,8 @@ const EditProfile = () => {
     const [isPhoneChanged, setIsPhoneChanged] = useState(false);
     const [changeCounters, setChangeCounters] = useState({ email: 0, phoneNumber: 0 });
     const [uploadProgress, setUploadProgress] = useState({});
+    const [isProcessingOtp, setIsProcessingOtp] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
     const [authState, setAuthState] = useState({
         isAuthenticated: false,
         isAuthorized: false,
@@ -283,7 +285,10 @@ const EditProfile = () => {
             setError('Please enter a valid phone number');
             return;
         }
-
+    
+        setIsSendingOtp(true);
+        setError('');
+    
         try {
             setupRecaptcha();
             const appVerifier = window.recaptchaVerifier;
@@ -294,7 +299,16 @@ const EditProfile = () => {
             setSuccessMessage('OTP sent successfully!');
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
-            setError('Error sending OTP. Please try again.');
+            console.error("Error sending OTP:", err);
+            
+            // Handle specific error cases
+            if (err.code === 'auth/invalid-phone-number') {
+                setError('Invalid phone number format. Please check and try again.');
+            } else {
+                setError('Error sending OTP. Please try again.');
+            }
+        } finally {
+            setIsSendingOtp(false);
         }
     };
 
@@ -303,7 +317,10 @@ const EditProfile = () => {
             setError('Please enter the OTP');
             return;
         }
-
+    
+        setIsProcessingOtp(true);
+        setError('');
+    
         try {
             const credential = PhoneAuthProvider.credential(confirmationResult.verificationId, otp);
             await linkWithCredential(auth.currentUser, credential);
@@ -312,7 +329,19 @@ const EditProfile = () => {
             setSuccessMessage('Phone number verified successfully!');
             setTimeout(() => setSuccessMessage(''), 3000);
         } catch (err) {
-            setError('Invalid OTP. Please try again.');
+            console.error("Error verifying OTP:", err);
+            
+            if (err.code === 'auth/account-exists-with-different-credential') {
+                setError('This phone number is already associated with another account. Please use a different phone number.');
+            } else if (err.code === 'auth/invalid-verification-code') {
+                setError('Invalid OTP. Please check and try again.');
+            } else if (err.code === 'auth/credential-already-in-use') {
+                setError('This phone number is already in use by another account.');
+            } else {
+                setError('Failed to verify OTP. Please try again.');
+            }
+        } finally {
+            setIsProcessingOtp(false);
         }
     };
 
@@ -480,17 +509,17 @@ const EditProfile = () => {
                             inputClass="Edit-FoodSeller-phone-input"
                             containerClass="Edit-FoodSeller-phone-container"
                             disabled={changeCounters.phoneNumber >= 1}
-                        />
+                        />  
                         {isPhoneChanged && !isPhoneVerified && (
                             <motion.button
                                 type="button"
                                 onClick={sendOTP}
-                                className="Edit-FoodSeller-verify-btn"
-                                disabled={timer > 0}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                className={`Edit-FoodSeller-verify-btn ${isSendingOtp ? 'loading' : ''}`}
+                                disabled={timer > 0 || isSendingOtp}
+                                whileHover={{ scale: timer > 0 || isSendingOtp ? 1 : 1.05 }}
+                                whileTap={{ scale: timer > 0 || isSendingOtp ? 1 : 0.95 }}
                             >
-                                {timer > 0 ? `Resend OTP in ${timer}s` : 'Verify Phone'}
+                                {isSendingOtp ? 'Sending...' : timer > 0 ? `Resend OTP in ${timer}s` : 'Verify Phone'}
                             </motion.button>
                         )}
                     </div>
@@ -515,11 +544,12 @@ const EditProfile = () => {
                             <motion.button
                                 type="button"
                                 onClick={verifyOTP}
-                                className="Edit-FoodSeller-verify-btn"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                className={`Edit-FoodSeller-verify-btn ${isProcessingOtp ? 'loading' : ''}`}
+                                disabled={isProcessingOtp}
+                                whileHover={{ scale: isProcessingOtp ? 1 : 1.05 }}
+                                whileTap={{ scale: isProcessingOtp ? 1 : 0.95 }}
                             >
-                                Verify OTP
+                                {isProcessingOtp ? 'Verifying...' : 'Verify OTP'}
                             </motion.button>
                         </div>
                     </motion.div>
@@ -611,13 +641,14 @@ const EditProfile = () => {
                     <motion.button
                         type="submit"
                         className="Edit-FoodSeller-submit"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: isSubmitting || (isPhoneChanged && !isPhoneVerified) ? 1 : 1.05 }}
+                        whileTap={{ scale: isSubmitting || (isPhoneChanged && !isPhoneVerified) ? 1 : 0.95 }}
                         disabled={isSubmitting || (isPhoneChanged && !isPhoneVerified)}
                     >
-                        Update Profile
+                        {isSubmitting ? 'Updating...' : 'Update Profile'}
                     </motion.button>
                     <motion.button
+                        type="button"
                         onClick={handleGoBack}
                         className="Edit-FoodSeller-back-btn"
                         whileHover={{ scale: 1.05 }}

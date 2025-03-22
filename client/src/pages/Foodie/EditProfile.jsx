@@ -38,6 +38,8 @@ const EditProfile = () => {
   const [isPhoneChanged, setIsPhoneChanged] = useState(false);
   const [changeCounters, setChangeCounters] = useState({ email: 0, phoneNumber: 0 });
   const [uploadProgress, setUploadProgress] = useState({});
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     isAuthorized: false,
@@ -228,6 +230,9 @@ const EditProfile = () => {
       return;
     }
 
+    setSendingOtp(true);
+    setError('');
+
     try {
       setupRecaptcha();
       const appVerifier = window.recaptchaVerifier;
@@ -238,8 +243,14 @@ const EditProfile = () => {
       setSuccessMessage('OTP sent successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setError('Error sending OTP. Please try again.');
       console.error('Error sending OTP:', err);
+      if (err.code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number format. Please check and try again.');
+      } else {
+        setError('Error sending OTP. Please try again.');
+      }
+    } finally {
+      setSendingOtp(false);
     }
   };
 
@@ -249,6 +260,9 @@ const EditProfile = () => {
       return;
     }
 
+    setVerifyingOtp(true);
+    setError('');
+
     try {
       const credential = PhoneAuthProvider.credential(confirmationResult.verificationId, otp);
       await linkWithCredential(auth.currentUser, credential);
@@ -257,8 +271,20 @@ const EditProfile = () => {
       setSuccessMessage('Phone number verified successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setError('Invalid OTP. Please try again.');
       console.error('Error verifying OTP:', err);
+      
+      // Handle specific error types
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        setError('This phone number is already linked to another account. Please use a different number.');
+      } else if (err.code === 'auth/invalid-verification-code') {
+        setError('The verification code is invalid. Please enter the correct code.');
+      } else if (err.code === 'auth/code-expired') {
+        setError('The verification code has expired. Please request a new one.');
+      } else {
+        setError('Invalid OTP. Please try again.');
+      }
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -291,6 +317,7 @@ const EditProfile = () => {
     }
 
     setIsSubmitting(true);
+    setError('');
 
     try {
       const uid = auth.currentUser.uid;
@@ -418,6 +445,11 @@ const EditProfile = () => {
             className="Edit-Foodie-input" 
             disabled={changeCounters.email >= 1} 
           />
+          {changeCounters.email >= 1 && (
+            <small style={{color: '#666', marginTop: '4px'}}>
+              Email can only be changed once. Contact support for more changes.
+            </small>
+          )}
         </div>
 
         <div className="Edit-Foodie-form-group">
@@ -425,7 +457,7 @@ const EditProfile = () => {
           <div className="Edit-Foodie-phone-section">
             <PhoneInput
               country={'in'}
-              value={formData.phoneNumber}
+              value={formData.phoneNumber ? formData.phoneNumber.replace('+', '') : ''}
               onChange={handlePhoneChange}
               inputClass="Edit-Foodie-phone-input"
               containerClass="Edit-Foodie-phone-container"
@@ -435,15 +467,20 @@ const EditProfile = () => {
               <motion.button
                 type="button"
                 onClick={sendOTP}
-                className="Edit-Foodie-verify-btn"
-                disabled={timer > 0}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className={`Edit-Foodie-verify-btn ${sendingOtp ? 'Edit-Foodie-btn-loading' : ''}`}
+                disabled={timer > 0 || sendingOtp}
+                whileHover={{ scale: timer > 0 || sendingOtp ? 1 : 1.05 }}
+                whileTap={{ scale: timer > 0 || sendingOtp ? 1 : 0.95 }}
               >
-                {timer > 0 ? `Resend OTP in ${timer}s` : 'Verify Phone'}
+                {sendingOtp ? '' : timer > 0 ? `Resend in ${timer}s` : 'Verify Phone'}
               </motion.button>
             )}
           </div>
+          {changeCounters.phoneNumber >= 1 && (
+            <small style={{color: '#666', marginTop: '4px'}}>
+              Phone number can only be changed once. Contact support for more changes.
+            </small>
+          )}
         </div>
 
         {isVerifying && (
@@ -465,11 +502,12 @@ const EditProfile = () => {
               <motion.button
                 type="button"
                 onClick={verifyOTP}
-                className="Edit-Foodie-verify-btn"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className={`Edit-Foodie-verify-btn ${verifyingOtp ? 'Edit-Foodie-btn-loading' : ''}`}
+                disabled={!otp || otp.length < 6 || verifyingOtp}
+                whileHover={{ scale: !otp || otp.length < 6 || verifyingOtp ? 1 : 1.05 }}
+                whileTap={{ scale: !otp || otp.length < 6 || verifyingOtp ? 1 : 0.95 }}
               >
-                Verify OTP
+                {verifyingOtp ? '' : 'Verify OTP'}
               </motion.button>
             </div>
           </motion.div>
@@ -480,17 +518,18 @@ const EditProfile = () => {
             type="submit" 
             className="Edit-Foodie-submit-btn"
             disabled={isSubmitting || (isPhoneChanged && !isPhoneVerified)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: isSubmitting || (isPhoneChanged && !isPhoneVerified) ? 1 : 1.05 }}
+            whileTap={{ scale: isSubmitting || (isPhoneChanged && !isPhoneVerified) ? 1 : 0.95 }}
           >
-            Update Profile
+            {isSubmitting ? 'Updating...' : 'Update Profile'}
           </motion.button>
           <motion.button 
             type="button" 
             className="Edit-Foodie-cancel-btn" 
             onClick={handleGoBack}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            disabled={isSubmitting}
+            whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
+            whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
           >
             Go Back
           </motion.button>

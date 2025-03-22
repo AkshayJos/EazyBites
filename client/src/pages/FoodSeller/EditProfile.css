@@ -147,8 +147,10 @@
     padding: 0.75rem !important;
     border: 1px solid #ddd !important;
     border-radius: 5px !important;
+    padding-left: 52px !important;
 }
 
+/* Improved verification button styles */
 .Edit-FoodSeller-verify-btn {
     padding: 0.75rem 1.5rem;
     background-color: #3498db;
@@ -156,12 +158,54 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+}
+
+.Edit-FoodSeller-verify-btn:hover:not(:disabled) {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.Edit-FoodSeller-verify-btn:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .Edit-FoodSeller-verify-btn:disabled {
     background-color: #95a5a6;
     cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Loading state */
+.Edit-FoodSeller-verify-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.Edit-FoodSeller-verify-btn.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .Edit-FoodSeller-otp-section {
@@ -256,13 +300,51 @@
     border-radius: 5px;
     font-size: 1.1rem;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
     margin-top: 1rem;
     flex: 1;
+    position: relative;
 }
 
-.Edit-FoodSeller-submit:hover {
+.Edit-FoodSeller-submit:hover:not(:disabled) {
     background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.Edit-FoodSeller-submit:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.Edit-FoodSeller-button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.Edit-FoodSeller-back-btn {
+    padding: 1rem;
+    background-color: #cc0707;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    margin-top: 16px;
+}
+
+.Edit-FoodSeller-back-btn:hover {
+    background-color: #8d0a0a;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.Edit-FoodSeller-back-btn:active {
+    transform: translateY(0);
 }
 
 @media (max-width: 768px) {
@@ -277,6 +359,7 @@
 
     .Edit-FoodSeller-verify-btn {
         width: 100%;
+        margin-top: 0.5rem;
     }
 
     .Edit-FoodSeller-otp-section {
@@ -285,13 +368,6 @@
 
     .Edit-FoodSeller-stall-photos {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    }
-
-    .Edit-FoodSeller-back-btn {
-        top: 1rem;
-        left: 1rem;
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
     }
 }
 
@@ -311,33 +387,10 @@
 
     .Edit-FoodSeller-button-group {
         flex-direction: column;
-      }
+    }
       
-      .Edit-FoodSeller-back-btn,
-      .Edit-FoodSeller-submit {
+    .Edit-FoodSeller-back-btn,
+    .Edit-FoodSeller-submit {
         width: 100%;
-      }
+    }
 }
-
-.Edit-FoodSeller-button-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-
-.Edit-FoodSeller-back-btn {
-    padding: 1rem;
-    background-color: #cc0707;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    flex: 1;
-    margin-top: 16px;
-  }
-  
-  .Edit-FoodSeller-back-btn:hover {
-    background-color: #8d0a0a;
-  }
