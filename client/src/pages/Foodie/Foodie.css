@@ -169,7 +169,7 @@
     .foodieDash-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
-        padding: 0.5rem;
+        padding: 0;
         width: 100%;
         max-width: 100%;
     }
@@ -188,6 +188,7 @@
         justify-content: flex-start;
         gap: 1rem;
         width: 100%;
+        box-sizing: border-box;
     }
 
     .foodieDash-icon {

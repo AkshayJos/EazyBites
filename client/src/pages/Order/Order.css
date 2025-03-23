@@ -1,5 +1,4 @@
 /* Order.css - Contains all styles for the Order component and modals */
-
 .Order-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -9,6 +8,7 @@
     align-items: center;
     min-height: calc(100vh - 100px);
     position: relative;
+    overflow-x: hidden;
 }
 
 .Order-content {
@@ -18,34 +18,101 @@
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    flex-direction: column;
 }
 
 .Order-image-gallery {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
     background-color: #f8f9fa;
+    width: 100%;
+}
+
+.Order-carousel-container {
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+}
+
+.Order-carousel-navigation {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    width: 100%;
+    overflow: hidden;
 }
 
 .Order-image {
     max-width: 100%;
-    max-height: 500px;
-    object-fit: cover;
+    max-height: 300px;
+    object-fit: contain;
     border-radius: 10px;
 }
 
+.Order-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.Order-carousel-arrow:hover {
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.Order-carousel-arrow-left {
+    left: 10px;
+}
+
+.Order-carousel-arrow-right {
+    right: 10px;
+}
+
+.Order-carousel-dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.Order-carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ccc;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.Order-carousel-dot-active {
+    background-color: #28a745;
+    transform: scale(1.2);
+}
+
 .Order-details {
-    flex: 1;
-    padding: 30px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    width: 100%;
 }
 
 .Order-name {
-    font-size: 2.5rem;
+    font-size: 2rem;
     margin-bottom: 15px;
     color: #333;
     font-weight: bold;
@@ -53,16 +120,85 @@
 
 .Order-info {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 15px;
     color: #666;
 }
 
-.Order-description {
+.Order-info-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.Order-info-label {
+    font-weight: bold;
+    color: #555;
+}
+
+.Order-info-value {
+    color: #666;
+}
+
+.Order-description-container {
     margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.Order-description {
     color: #555;
     line-height: 1.6;
+}
+
+.Order-section-title {
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.Order-stall-details {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.Order-stall-info-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.Order-stall-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.Order-stall-info-label {
+    font-weight: bold;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.Order-stall-info-value {
+    color: #666;
+}
+
+.Order-stall-description {
+    margin-top: 10px;
+}
+
+.Order-stall-description-text {
+    color: #666;
+    margin-top: 5px;
+    line-height: 1.5;
 }
 
 .Order-purchase-section {
@@ -70,6 +206,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .Order-price {
@@ -78,7 +216,7 @@
     color: #28a745;
 }
 
-.Order-quantity {
+.Order-quantity-container {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -95,6 +233,7 @@
     align-items: center;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 1.2rem;
 }
 
 .Order-quantity-btn:disabled {
@@ -105,6 +244,8 @@
 .Order-quantity-display {
     font-size: 1.2rem;
     font-weight: bold;
+    min-width: 30px;
+    text-align: center;
 }
 
 .Order-place-button {
@@ -117,6 +258,11 @@
     font-size: 1.2rem;
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+.Order-place-button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
 }
 
 /* Order Modal Styles */
@@ -141,6 +287,8 @@
     max-width: 500px;
     width: 90%;
     text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .Order-modal-title {
@@ -267,28 +415,54 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
     .Order-content {
-        flex-direction: column;
+        flex-direction: row;
     }
 
     .Order-image-gallery,
     .Order-details {
-        flex: auto;
-        width: 100%;
+        flex: 1;
+    }
+
+    .Order-stall-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .Order-container {
+        padding: 10px;
+    }
+
+    .Order-content {
+        flex-direction: column;
     }
 
     .Order-name {
-        font-size: 2rem;
+        font-size: 1.8rem;
+    }
+
+    .Order-image-gallery {
+        padding: 10px;
+    }
+
+    .Order-carousel-navigation {
+        height: 250px;
+    }
+
+    .Order-image {
+        max-height: 250px;
     }
 
     .Order-details {
-        padding: 20px;
+        padding: 15px;
     }
 
     .Order-modal {
         width: 95%;
         padding: 20px;
+        max-height: 80vh;
     }
 
     .Order-modal-title {
@@ -302,5 +476,154 @@
 
     .Order-modal-btn {
         width: 100%;
+    }
+
+    .Order-carousel-arrow {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .Order-name {
+        font-size: 1.5rem;
+    }
+
+    .Order-carousel-navigation {
+        height: 200px;
+    }
+
+    .Order-image {
+        max-height: 200px;
+    }
+
+    .Order-price {
+        font-size: 1.3rem;
+    }
+
+    .Order-purchase-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .Order-quantity-container {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .Order-place-button {
+        font-size: 1.1rem;
+        padding: 12px;
+    }
+
+    .Order-token-number {
+        font-size: 2rem;
+    }
+}
+
+/* Add this to your existing Order.css file */
+
+/* Mobile Fixed Bottom Bar */
+.Order-mobile-bottom-bar {
+    display: none; /* Hidden by default */
+}
+
+@media (max-width: 768px) {
+    /* Add padding to the bottom of container to prevent content from being hidden behind the fixed bar */
+    .Order-container {
+        padding-bottom: 80px;
+    }
+    
+    /* Hide the original purchase section on mobile */
+    .Order-purchase-section {
+        display: none;
+    }
+    
+    /* Hide the original place button on mobile */
+    .Order-place-button {
+        display: none;
+    }
+    
+    /* Show and style the fixed bottom bar */
+    .Order-mobile-bottom-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        padding: 10px 15px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid #eee;
+    }
+    
+    .Order-mobile-price-qty {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .Order-mobile-price {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .Order-mobile-quantity-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .Order-mobile-quantity-btn {
+        width: 32px;
+        height: 32px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .Order-mobile-quantity-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .Order-mobile-quantity-display {
+        font-size: 1.1rem;
+        font-weight: bold;
+        min-width: 20px;
+        text-align: center;
+    }
+    
+    .Order-mobile-place-button {
+        padding: 10px 15px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .Order-mobile-place-button:hover {
+        background-color: #218838;
+    }
+    
+    /* Adjust modal to appear above the fixed bottom bar */
+    .Order-modal-overlay {
+        z-index: 1001;
     }
 }

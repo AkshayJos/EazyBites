@@ -19,19 +19,33 @@
 .login-phone-container {
   margin-bottom: 1.5rem;
   display: flex;
+  flex-direction: row; /* Changed from row to column for better mobile display */
   justify-content: center;
   align-items: center;
   gap: 1rem;
+  width: 100%;
+}
+
+/* Style for the phone input container */
+.phone-input-container {
+  width: 100% !important; /* Important to override library styles */
+  margin-bottom: 1rem;
+}
+
+/* Make sure the country dropdown doesn't overflow */
+.country-dropdown {
+  min-width: auto !important;
 }
 
 .login-input {
-  width: 92%;
+  width: 100%; /* Changed from 92% to 100% */
   padding: 0.8rem 1rem;
   border: 1px solid #ced4da;
   border-radius: 6px;
   font-size: 1rem;
   margin-bottom: 1rem;
   transition: border-color 0.3s ease;
+  box-sizing: border-box; /* Ensure padding is included in width */
 }
 
 .login-input:focus {
@@ -84,6 +98,13 @@
   cursor: not-allowed;
 }
 
+/* Set a proper size for the Google logo */
+.google-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .login-or-divider {
   display: flex;
   align-items: center;
@@ -112,6 +133,7 @@
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #dee2e6;
+  width: 100%;
 }
 
 .login-signup-section {
@@ -134,6 +156,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .login-hero-button:hover {
@@ -162,9 +185,15 @@
 
 /* Responsive Design */
 @media (max-width: 576px) {
+  .login-phone-container{
+    flex-direction: column;
+  }
+
   .login-container {
     margin: 1rem;
     padding: 1.5rem;
+    width: auto;
+    max-width: 100%;
   }
 
   .login-title {
@@ -174,6 +203,22 @@
   .login-signup-buttons {
     flex-direction: column;
     gap: 0.5rem;
+  }
+  
+  .login-hero-button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Ensure the phone input is responsive */
+  .phone-input-container {
+    width: 100% !important;
+  }
+  
+  /* Adjust the input field inside the phone input */
+  .phone-input-container input {
+    width: 100% !important;
+    padding-left: 50px !important; /* Give space for country code */
   }
 }
 

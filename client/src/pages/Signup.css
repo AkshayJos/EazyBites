@@ -102,19 +102,39 @@
 .signup-phone-container {
   margin-bottom: 1.5rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Responsive layout for phone container */
+@media (min-width: 576px) {
+  .signup-phone-container {
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+  }
+}
+
+/* Phone input container styles */
+.phone-input-container {
+  width: 100% !important;
+  margin-bottom: 1rem;
+}
+
+/* Country dropdown button */
+.country-dropdown {
+  border-radius: 6px 0 0 6px !important;
 }
 
 .signup-input {
-  width: 92%;
+  width: 100%;
   padding: 0.8rem 1rem;
   border: 1px solid #ced4da;
   border-radius: 6px;
   font-size: 1rem;
   margin-bottom: 1rem;
   transition: border-color 0.3s ease;
+  box-sizing: border-box;
 }
 
 .signup-input:focus {
@@ -144,6 +164,7 @@
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #dee2e6;
+  width: 100%;
 }
 
 .signup-or-divider {
@@ -214,6 +235,16 @@
   .signup-title {
     font-size: 1.5rem;
   }
+  
+  .signup-google-btn {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+  
+  .google-logo {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .signup-input-container {
@@ -226,10 +257,10 @@
 }
 
 .terms-label {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   cursor: pointer;
+  font-size: 0.9rem;
 }
 
 .timer {
@@ -257,4 +288,54 @@ input:disabled,
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .phone-input-container {
+    width: 100% !important;
+  }
+  
+  .react-phone-input-2,
+  .react-phone-input-2 input,
+  .react-phone-input-2 .form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Reduce horizontal padding in the signup container */
+  .signup-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  /* Smaller font sizes for tiny screens */
+  .signup-title {
+    font-size: 1.25rem;
+  }
+  
+  .signup-submit-btn,
+  .signup-google-btn {
+    font-size: 0.85rem;
+    padding: 0.7rem;
+  }
+}
+
+/* For very small phones (smaller than 320px) */
+@media (max-width: 320px) {
+  .signup-container {
+    padding: 0.75rem;
+  }
+  
+  .google-logo {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .signup-type-selector {
+    padding: 0.5rem;
+  }
+  
+  .terms-label {
+    font-size: 0.8rem;
+  }
 }

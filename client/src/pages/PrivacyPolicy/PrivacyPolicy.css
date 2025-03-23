@@ -1,13 +1,15 @@
+/* PrivacyPolicy.css */
 .PP-container {
-    padding: 20px;
-    width: 90%;
-    max-width: 800px;
-    margin: 2rem auto;
+    padding: clamp(15px, 5vw, 30px);
+    width: clamp(300px, 90%, 800px);
+    max-width: 100%;
+    margin: clamp(1rem, 4vw, 2rem) auto;
     background-color: #ffffff;
-    border-radius: 12px;
+    border-radius: clamp(0px, 2vw, 12px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     position: relative;
+    box-sizing: border-box;
 }
 
 .PP-container::before {
@@ -22,8 +24,8 @@
 
 .PP-heading {
     text-align: center;
-    font-size: 2.2rem;
-    margin: 1.5rem 0;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    margin: clamp(1rem, 3vw, 1.5rem) 0;
     background: linear-gradient(135deg, #ff6a1c, #e2342b);
     -webkit-background-clip: text;
     background-clip: text;
@@ -33,17 +35,19 @@
 
 .PP-terms-box {
     background-color: #f9f9f9;
-    padding: 25px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    padding: clamp(15px, 4vw, 25px);
+    border-radius: clamp(6px, 2vw, 8px);
+    margin-bottom: clamp(15px, 3vw, 20px);
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .PP-subheading {
-    margin-top: 22px;
-    margin-bottom: 12px;
+    margin-top: clamp(18px, 3vw, 22px);
+    margin-bottom: clamp(10px, 2vw, 12px);
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
     color: #ff7e5f;
     border-bottom: 1px solid #e6e6e6;
     padding-bottom: 8px;
@@ -53,14 +57,16 @@
     line-height: 1.7;
     color: #444;
     margin-bottom: 15px;
-    font-size: 1rem;
+    font-size: clamp(0.95rem, 2vw, 1rem);
+    width: 100%;
+    word-wrap: break-word;
 }
 
 .PP-button {
     display: block;
-    width: 120px;
-    margin: 25px auto 10px;
-    padding: 12px 24px;
+    width: clamp(100px, 30%, 120px);
+    margin: clamp(15px, 4vw, 25px) auto clamp(10px, 2vw, 10px);
+    padding: clamp(10px, 3vw, 12px) clamp(20px, 4vw, 24px);
     background: linear-gradient(135deg, #ff6a1c, #e2342b);
     color: #fff;
     border: none;
@@ -68,64 +74,17 @@
     cursor: pointer;
     font-weight: 600;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 15px #ff7e5f(0, 120, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
     transition: all 0.3s ease;
 }
 
 .PP-button:hover {
     background: linear-gradient(135deg, #ff6a1c, #e2342b);
-    box-shadow: 0 6px 20px #ff7e5f(0, 120, 255, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 126, 95, 0.4);
 }
 
-/* Media Queries for Responsiveness */
-@media (max-width: 768px) {
-    .PP-container {
-        width: 95%;
-        padding: 15px;
-        margin: 1rem auto;
-    }
-    
-    .PP-heading {
-        font-size: 1.8rem;
-    }
-    
-    .PP-terms-box {
-        padding: 18px;
-    }
-    
-    .PP-subheading {
-        font-size: 1.1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .PP-container {
-        width: 100%;
-        border-radius: 0;
-        box-shadow: none;
-        margin: 0;
-    }
-    
-    .PP-heading {
-        font-size: 1.6rem;
-        margin: 1rem 0;
-    }
-    
-    .PP-terms-box {
-        padding: 15px;
-        border-radius: 6px;
-    }
-    
-    .PP-subheading {
-        font-size: 1rem;
-    }
-    
-    .PP-paragraph {
-        font-size: 0.95rem;
-    }
-    
-    .PP-button {
-        width: 100px;
-        padding: 10px 20px;
-    }
-}
+/* Prevent horizontal scrolling on all devices */
+/* html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+} */

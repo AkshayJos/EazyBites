@@ -15,7 +15,7 @@ const TermsAndConditions = () => {
     }
   };
 
-  // Animation variants
+  // Animation variants - updated to match PrivacyPolicy
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -23,14 +23,18 @@ const TermsAndConditions = () => {
       transition: { 
         duration: 0.5,
         when: "beforeChildren",
-        staggerChildren: 0.2
+        staggerChildren: 0.1
       }
     }
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { duration: 0.4 }
+    }
   };
 
   return (
@@ -40,49 +44,73 @@ const TermsAndConditions = () => {
       animate="visible"
       variants={containerVariants}
     >
-      <motion.div className="TC-content" variants={itemVariants}>
-        <motion.h1 
-          className="TC-heading"
+      <motion.h1 
+        className="TC-heading"
+        variants={itemVariants}
+      >
+        Terms and Conditions
+      </motion.h1>
+      
+      <motion.div 
+        className="TC-terms-box"
+        variants={itemVariants}
+      >
+        <motion.p 
+          className="TC-paragraph"
           variants={itemVariants}
         >
-          Terms and Conditions
-        </motion.h1>
-        
-        <motion.div 
-          className="TC-terms-box"
-          variants={itemVariants}
-          whileHover={{ boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" }}
-        >
-          <p className="TC-paragraph">
-            Welcome to EazyBites! Before using our platform, please read the terms carefully.
-          </p>
-          <h3 className="TC-subheading">1. Introduction</h3>
-          <p className="TC-paragraph">These Terms govern your use of EazyBites, an online food ordering service.</p>
-          <h3 className="TC-subheading">2. User Responsibilities</h3>
-          <p className="TC-paragraph">Users must provide accurate information and comply with platform rules.</p>
-          <h3 className="TC-subheading">3. Ordering and Payment</h3>
-          <p className="TC-paragraph">Orders are subject to availability. Payments must be made at pickup.</p>
-          <h3 className="TC-subheading">4. Privacy & Security</h3>
-          <p className="TC-paragraph">We use Firebase for authentication and data security.</p>
-          <h3 className="TC-subheading">5. Liability</h3>
-          <p className="TC-paragraph">We are not responsible for food quality or delays.</p>
-          <h3 className="TC-subheading">6. Changes to Terms</h3>
-          <p className="TC-paragraph">We reserve the right to update these terms at any time.</p>
-        </motion.div>
-        
-        <motion.button 
-          id="TC-back-btn" 
-          onClick={handleBack} 
-          className="TC-button"
-          variants={itemVariants}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {location.key !== "default" ? "Go Back" : "Go To Home"}
-        </motion.button>
+          Welcome to EazyBites! Before using our platform, please read the terms carefully.
+        </motion.p>
+
+        {[1, 2, 3, 4, 5, 6].map((section) => (
+          <motion.div key={section} variants={itemVariants}>
+            <h3 className="TC-subheading">
+              {section}. {getSectionTitle(section)}
+            </h3>
+            <p className="TC-paragraph">
+              {getSectionContent(section)}
+            </p>
+          </motion.div>
+        ))}
       </motion.div>
+
+      <motion.button 
+        id="TC-back-btn" 
+        onClick={handleBack} 
+        className="TC-button"
+        variants={itemVariants}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {location.key !== "default" ? "Back" : "Go To Home"}
+      </motion.button>
     </motion.div>
   );
+};
+
+// Helper functions for content - similar to PrivacyPolicy.jsx
+const getSectionTitle = (section) => {
+  const titles = {
+    1: "Introduction",
+    2: "User Responsibilities",
+    3: "Ordering and Payment",
+    4: "Privacy & Security",
+    5: "Liability",
+    6: "Changes to Terms"
+  };
+  return titles[section];
+};
+
+const getSectionContent = (section) => {
+  const content = {
+    1: "These Terms govern your use of EazyBites, an online food ordering service.",
+    2: "Users must provide accurate information and comply with platform rules.",
+    3: "Orders are subject to availability. Payments must be made at pickup.",
+    4: "We use Firebase for authentication and data security.",
+    5: "We are not responsible for food quality or delays.",
+    6: "We reserve the right to update these terms at any time."
+  };
+  return content[section];
 };
 
 export default TermsAndConditions;

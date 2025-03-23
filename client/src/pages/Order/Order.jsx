@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -47,6 +47,8 @@ const Order = () => {
         authError: null,
         userData: null
     });
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const carouselIntervalRef = useRef(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -137,7 +139,14 @@ const Order = () => {
                 setDataLoading(true);
                 try {
                     const response = await axios.get(`${API}/food/foodItem/${fid}`);
-                    setItemData(response.data);
+                    const data = response.data;
+                    
+                    // Combine food item photos with stall photos if available
+                    if (data.stallPhotos && data.stallPhotos.length > 0) {
+                        data.photoURLs = [...data.photoURLs, ...data.stallPhotos];
+                    }
+                    
+                    setItemData(data);
                 } catch (error) {
                     console.error('Error fetching item data:', error);
                 } finally {
@@ -148,6 +157,23 @@ const Order = () => {
 
         fetchItemData();
     }, [fid, authState.isAuthenticated, authState.isAuthorized, API]);
+
+    // Set up image carousel
+    useEffect(() => {
+        if (itemData?.photoURLs?.length > 1) {
+            carouselIntervalRef.current = setInterval(() => {
+                setCurrentImageIndex(prevIndex => 
+                    (prevIndex + 1) % itemData.photoURLs.length
+                );
+            }, 5000); // Change image every 5 seconds
+        }
+        
+        return () => {
+            if (carouselIntervalRef.current) {
+                clearInterval(carouselIntervalRef.current);
+            }
+        };
+    }, [itemData]);
 
     useEffect(() => {
         if (!currentOrderIds.globalOrderId) return;
@@ -326,6 +352,20 @@ const Order = () => {
         }
     };
 
+    const handlePrevImage = () => {
+        if (!itemData?.photoURLs?.length) return;
+        setCurrentImageIndex(prevIndex => 
+            prevIndex === 0 ? itemData.photoURLs.length - 1 : prevIndex - 1
+        );
+    };
+
+    const handleNextImage = () => {
+        if (!itemData?.photoURLs?.length) return;
+        setCurrentImageIndex(prevIndex => 
+            (prevIndex + 1) % itemData.photoURLs.length
+        );
+    };
+
     if (loading || (authState.isAuthenticated && authState.isAuthorized && dataLoading)) {
         return <Loader />;
     }
@@ -358,20 +398,45 @@ const Order = () => {
                 transition={{ duration: 0.5 }}
             >
                 <div className="Order-image-gallery">
-                    <AnimatePresence>
-                        {itemData && itemData.photoURLs && itemData.photoURLs.map((url, index) => (
-                            <motion.img
-                                key={index}
-                                src={url}
-                                alt={`${itemData.name} - view ${index + 1}`}
-                                className="Order-image"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                            />
-                        ))}
-                    </AnimatePresence>
+                    {itemData?.photoURLs?.length > 0 && (
+                        <div className="Order-carousel-container">
+                            <div className="Order-carousel-navigation">
+                                <button 
+                                    className="Order-carousel-arrow Order-carousel-arrow-left"
+                                    onClick={handlePrevImage}
+                                    aria-label="Previous image"
+                                >
+                                    &#10094;
+                                </button>
+                                <motion.img
+                                    key={currentImageIndex}
+                                    src={itemData.photoURLs[currentImageIndex]}
+                                    alt={`${itemData.name}`}
+                                    className="Order-image"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                />
+                                <button 
+                                    className="Order-carousel-arrow Order-carousel-arrow-right"
+                                    onClick={handleNextImage}
+                                    aria-label="Next image"
+                                >
+                                    &#10095;
+                                </button>
+                            </div>
+                            <div className="Order-carousel-dots">
+                                {itemData.photoURLs.map((_, index) => (
+                                    <span 
+                                        key={index} 
+                                        className={`Order-carousel-dot ${index === currentImageIndex ? 'Order-carousel-dot-active' : ''}`}
+                                        onClick={() => setCurrentImageIndex(index)}
+                                    ></span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="Order-details">
@@ -381,21 +446,60 @@ const Order = () => {
                                 {itemData.name}
                             </motion.h1>
                             <div className="Order-info">
-                                <p className="Order-stall">Stall: {itemData.stallName}</p>
-                                <div className="Order-rating">
-                                    <span>Rating: {itemData.rating ? itemData.rating.toFixed(2) : "N/A"}</span>
+                                <div className="Order-info-item">
+                                    <span className="Order-info-label">Stall:</span> 
+                                    <span className="Order-info-value">{itemData.stallName}</span>
+                                </div>
+                                <div className="Order-info-item">
+                                    <span className="Order-info-label">Rating:</span> 
+                                    <span className="Order-info-value">
+                                        {itemData.rating ? `${itemData.rating.toFixed(1)} ★ (${itemData.totalRatings} ratings)` : "N/A"}
+                                    </span>
                                 </div>
                             </div>
-                            <p className="Order-description">{itemData.description}</p>
+                            
+                            <div className="Order-description-container">
+                                <p className="Order-description">{itemData.description}</p>
+                            </div>
+
+                            <div className="Order-stall-details">
+                                <h3 className="Order-section-title">Stall Information</h3>
+                                <div className="Order-stall-info-grid">
+                                    <div className="Order-stall-info-item">
+                                        <span className="Order-stall-info-label">Owner:</span>
+                                        <span className="Order-stall-info-value">{itemData.stallOwner}</span>
+                                    </div>
+                                    <div className="Order-stall-info-item">
+                                        <span className="Order-stall-info-label">Location:</span>
+                                        <span className="Order-stall-info-value">{itemData.landmark}</span>
+                                    </div>
+                                    <div className="Order-stall-info-item">
+                                        <span className="Order-stall-info-label">Phone:</span>
+                                        <span className="Order-stall-info-value">{itemData.stallPhoneNumber}</span>
+                                    </div>
+                                    <div className="Order-stall-info-item">
+                                        <span className="Order-stall-info-label">Email:</span>
+                                        <span className="Order-stall-info-value">{itemData.sellerEmail}</span>
+                                    </div>
+                                </div>
+                                {itemData.stallDescription && (
+                                    <div className="Order-stall-description">
+                                        <span className="Order-stall-info-label">About:</span>
+                                        <p className="Order-stall-description-text">{itemData.stallDescription}</p>
+                                    </div>
+                                )}
+                            </div>
+                            
                             <div className="Order-purchase-section">
                                 <div className="Order-price">
                                     <span>₹{parseFloat(itemData.price).toFixed(2)}</span>
                                 </div>
-                                <div className="Order-quantity">
+                                <div className="Order-quantity-container">
                                     <button
                                         onClick={() => handleQuantityChange(quantity - 1)}
                                         disabled={quantity <= 1}
                                         className="Order-quantity-btn"
+                                        aria-label="Decrease quantity"
                                     >
                                         -
                                     </button>
@@ -404,6 +508,7 @@ const Order = () => {
                                         onClick={() => handleQuantityChange(quantity + 1)}
                                         disabled={quantity >= 5}
                                         className="Order-quantity-btn"
+                                        aria-label="Increase quantity"
                                     >
                                         +
                                     </button>
@@ -422,131 +527,43 @@ const Order = () => {
                 </div>
             </motion.div>
 
-            {/* <AnimatePresence>
-                {showModal && (
-                    <motion.div 
-                        className="Order-modal-overlay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+            {itemData && (
+                <div className="Order-mobile-bottom-bar">
+                    <div className="Order-mobile-price-qty">
+                        <div className="Order-mobile-price">
+                            ₹{parseFloat(itemData.price).toFixed(2)}
+                        </div>
+                        <div className="Order-mobile-quantity-container">
+                            <button
+                                onClick={() => handleQuantityChange(quantity - 1)}
+                                disabled={quantity <= 1}
+                                className="Order-mobile-quantity-btn"
+                                aria-label="Decrease quantity"
+                            >
+                                -
+                            </button>
+                            <span className="Order-mobile-quantity-display">{quantity}</span>
+                            <button
+                                onClick={() => handleQuantityChange(quantity + 1)}
+                                disabled={quantity >= 5}
+                                className="Order-mobile-quantity-btn"
+                                aria-label="Increase quantity"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+                    <motion.button
+                        className="Order-mobile-place-button"
+                        onClick={handlePlaceOrder}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                     >
-                        <motion.div 
-                            className="Order-modal"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                        >
-                            {modalType === 'waitingForSeller' && (
-                                <div className="Order-modal-content">
-                                    <h2 className="Order-modal-title">Waiting for Seller...</h2>
-                                    <p className="Order-modal-message">Your order is being processed. The seller will respond within 1 minute.</p>
-                                    <div className="Order-timer-container">
-                                        <CountdownTimer seconds={60} onComplete={() => {}} />
-                                    </div>
-                                </div>
-                            )}
-                            {modalType === 'sellerResponse' && (
-                                <div className="Order-modal-content">
-                                    <h2 className="Order-modal-title">Order Accepted!</h2>
-                                    <p className="Order-modal-message">
-                                        The seller has accepted your order and estimates it will be ready in <span className="Order-wait-time">{waitingTime} minutes</span>.
-                                    </p>
-                                    <p className="Order-modal-submessage">Do you agree to wait?</p>
-                                    <div className="Order-timer-container">
-                                        <CountdownTimer seconds={60} onComplete={handleFoodieTimeout} />
-                                    </div>
-                                    <div className="Order-modal-actions">
-                                        <button 
-                                            className="Order-modal-btn Order-modal-btn-decline"
-                                            onClick={() => handleFoodieResponse(false)}
-                                        >
-                                            Decline
-                                        </button>
-                                        <button 
-                                            className="Order-modal-btn Order-modal-btn-agree"
-                                            onClick={() => handleFoodieResponse(true)}
-                                        >
-                                            Agree
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                            {modalType === 'sellerRejected' && (
-                                <div className="Order-modal-content">
-                                    <h2 className="Order-modal-title">Order Rejected</h2>
-                                    <p className="Order-modal-message">
-                                        The seller has rejected your order. This may be due to unavailability of the item or other reasons.
-                                    </p>
-                                    <button 
-                                        className="Order-modal-btn Order-modal-btn-close"
-                                        onClick={() => {
-                                            setShowModal(false);
-                                            navigate('/menu');
-                                        }}
-                                    >
-                                        Back to Menu
-                                    </button>
-                                </div>
-                            )}
-                            {modalType === 'orderConfirmed' && (
-                                <div className="Order-modal-content">
-                                    <h2 className="Order-modal-title">Order Confirmed!</h2>
-                                    <p className="Order-modal-message">
-                                        Your order has been confirmed. Please approach the stall.
-                                    </p>
-                                    <div className="Order-token-container">
-                                        <h3 className="Order-token-label">Your Token:</h3>
-                                        <div className="Order-token-number">{orderToken}</div>
-                                    </div>
-                                    <button 
-                                        className="Order-modal-btn Order-modal-btn-close"
-                                        onClick={() => {
-                                            setShowModal(false);
-                                            navigate('/menu');
-                                        }}
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            )}
-                            {modalType === 'sellerTimeout' && (
-                                <div className="Order-modal-content">
-                                    <h2 className="Order-modal-title">Order Timed Out</h2>
-                                    <p className="Order-modal-message">
-                                        The seller did not respond in time. Your order has been cancelled.
-                                    </p>
-                                    <button 
-                                        className="Order-modal-btn Order-modal-btn-close"
-                                        onClick={() => {
-                                            setShowModal(false);
-                                            navigate('/menu');
-                                        }}
-                                    >
-                                        Back to Menu
-                                    </button>
-                                </div>
-                            )}
-                            {modalType === 'foodieTimeout' && (
-                                <div className="Order-modal-content">
-                                    <h2 className="Order-modal-title">Response Timed Out</h2>
-                                    <p className="Order-modal-message">
-                                        You did not respond in time. Your order has been automatically cancelled.
-                                    </p>
-                                    <button 
-                                        className="Order-modal-btn Order-modal-btn-close"
-                                        onClick={() => {
-                                            setShowModal(false);
-                                            navigate('/menu');
-                                        }}
-                                    >
-                                        Back to Menu
-                                    </button>
-                                </div>
-                            )}
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence> */}
+                        Place Order
+                    </motion.button>
+                </div>
+            )}
+
             <AnimatePresence>
                 {showModal && (
                     <motion.div

@@ -1,137 +1,149 @@
+/* TC.css with styling to match PrivacyPolicy.css */
+
 .TC-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 80vh;
-    padding: 20px;
-    background-color: #f8f9fa;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: clamp(15px, 5vw, 30px);
+  width: clamp(300px, 90%, 800px);
+  max-width: 100%;
+  margin: clamp(1rem, 4vw, 2rem) auto;
+  background-color: #ffffff;
+  border-radius: clamp(0px, 2vw, 12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.TC-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(135deg, #ff6a1c, #e2342b);
+}
+
+.TC-content {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.TC-heading {
+  text-align: center;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  margin: clamp(1rem, 3vw, 1.5rem) 0;
+  background: linear-gradient(135deg, #ff6a1c, #e2342b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+.TC-terms-box {
+  background-color: #f9f9f9;
+  padding: clamp(15px, 4vw, 25px);
+  border-radius: clamp(6px, 2vw, 8px);
+  margin-bottom: clamp(15px, 3vw, 20px);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+.TC-terms-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.TC-terms-box::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+.TC-terms-box::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 8px;
+}
+
+.TC-terms-box::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+.TC-subheading {
+  margin-top: clamp(18px, 3vw, 22px);
+  margin-bottom: clamp(10px, 2vw, 12px);
+  font-weight: 600;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: #ff7e5f;
+  border-bottom: 1px solid #e6e6e6;
+  padding-bottom: 8px;
+}
+
+.TC-paragraph {
+  line-height: 1.7;
+  color: #444;
+  margin-bottom: 15px;
+  font-size: clamp(0.95rem, 2vw, 1rem);
+  width: 100%;
+  word-wrap: break-word;
+}
+
+.TC-button {
+  display: block;
+  width: clamp(100px, 30%, 120px);
+  margin: clamp(15px, 4vw, 25px) auto clamp(10px, 2vw, 10px);
+  padding: clamp(10px, 3vw, 12px) clamp(20px, 4vw, 24px);
+  background: linear-gradient(135deg, #ff6a1c, #e2342b);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
+  transition: all 0.3s ease;
+}
+
+.TC-button:hover {
+  background: linear-gradient(135deg, #ff6a1c, #e2342b);
+  box-shadow: 0 6px 20px rgba(255, 126, 95, 0.4);
+}
+
+/* Tablet Responsive Design */
+@media (max-width: 768px) {
+  .TC-terms-box {
+    max-height: 350px;
   }
-  
-  .TC-content {
-    width: 100%;
-    max-width: 800px;
-    background-color: white;
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 480px) {
+  .TC-terms-box {
+    max-height: 300px;
   }
-  
-  .TC-heading {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-    font-size: 28px;
+}
+
+/* Small Mobile Screens */
+@media (max-width: 320px) {
+  .TC-terms-box {
+    max-height: 250px;
+  }
+}
+
+/* Landscape Orientation for Mobile */
+@media (max-height: 480px) and (orientation: landscape) {
+  .TC-container {
+    margin: 0.5rem auto;
   }
   
   .TC-terms-box {
-    height: 350px;
-    overflow-y: auto;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-    background: #fff;
-    transition: all 0.3s ease;
+    max-height: 200px;
   }
-  
-  .TC-terms-box::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  .TC-terms-box::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 8px;
-  }
-  
-  .TC-terms-box::-webkit-scrollbar-thumb {
-    background: #c0c0c0;
-    border-radius: 8px;
-  }
-  
-  .TC-terms-box::-webkit-scrollbar-thumb:hover {
-    background: #a0a0a0;
-  }
-  
-  .TC-paragraph {
-    font-size: 15px;
-    line-height: 1.6;
-    color: #555;
-    margin-bottom: 15px;
-  }
-  
-  .TC-subheading {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-    margin-top: 20px;
-    margin-bottom: 10px;
-  }
-  
-  .TC-button {
-    display: block;
-    padding: 12px 24px;
-    border: none;
-    background: #4361ee;
-    color: white;
-    cursor: pointer;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 500;
-    margin: 0 auto;
-    transition: all 0.3s ease;
-  }
-  
-  .TC-button:hover {
-    background: #3a56d4;
-    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-  }
-  
-  .TC-button:focus {
-    outline: none;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .TC-content {
-      padding: 20px;
-    }
-    
-    .TC-heading {
-      font-size: 24px;
-    }
-    
-    .TC-terms-box {
-      height: 300px;
-      padding: 15px;
-    }
-    
-    .TC-subheading {
-      font-size: 16px;
-    }
-    
-    .TC-paragraph {
-      font-size: 14px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .TC-content {
-      padding: 15px;
-    }
-    
-    .TC-heading {
-      font-size: 20px;
-    }
-    
-    .TC-terms-box {
-      height: 250px;
-      padding: 12px;
-    }
-    
-    .TC-button {
-      padding: 10px 20px;
-      font-size: 14px;
-      width: 100%;
-    }
-  }
+}
+
+/* Prevent horizontal scrolling on all devices */
+/* html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+} */
