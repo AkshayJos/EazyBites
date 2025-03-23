@@ -345,28 +345,30 @@ const MyStall = () => {
         </span>
       </div>
       <div className="MyStall-toggle-container">
-        <span>Set Stall Live</span>
-        <label className="MyStall-switch">
-          <input 
-            type="checkbox" 
-            checked={isLive} 
-            onChange={handleToggle} 
-            aria-label="Toggle stall status"
-          />
-          <span className="MyStall-slider"></span>
-        </label>
-      <div className="MyStall-notifications">
-        <span>Notifications</span>
-        <label className="MyStall-switch">
-          <input 
-            type="checkbox" 
-            checked={notificationsEnabled} 
-            onChange={toggleNotifications} 
-            aria-label="Toggle notifications"
-          />
-          <span className="MyStall-slider"></span>
-        </label>
-      </div>
+        <div className="MyStall-toggle-item">
+          <span>Set Stall Live</span>
+          <label className="MyStall-switch">
+            <input 
+              type="checkbox" 
+              checked={isLive} 
+              onChange={handleToggle} 
+              aria-label="Toggle stall status"
+            />
+            <span className="MyStall-slider"></span>
+          </label>
+        </div>
+        <div className="MyStall-toggle-item">
+          <span>Notifications</span>
+          <label className="MyStall-switch">
+            <input 
+              type="checkbox" 
+              checked={notificationsEnabled} 
+              onChange={toggleNotifications} 
+              aria-label="Toggle notifications"
+            />
+            <span className="MyStall-slider"></span>
+          </label>
+        </div>
       </div>
 
 

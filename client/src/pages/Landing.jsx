@@ -1,9 +1,33 @@
 import React, { useEffect, useRef } from "react";
 import Home from "./Home/Home";
-import Menu from "../components/Menu/Menu"; // Import the new Menu component
+import Menu from "../components/Menu/Menu"; 
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const Landing = () => {
   const menuContentRef = useRef(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const userType = userDoc.data().signupType;
+                    navigate(userType === "Foodie" ? "/foodie" : "/food-seller");
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+            }
+        }
+    });
+
+    return () => unsubscribe();
+}, []);
 
   useEffect(() => {
     const handleScrollToMenu = () => {
@@ -25,59 +49,3 @@ const Landing = () => {
 };
 
 export default Landing;
-// import React, { useEffect, useRef } from "react";
-// import Home from "./Home/Home";
-
-// const Landing = () => {
-//   const futureContentRef = useRef(null);
-
-//   useEffect(() => {
-//     const handleScrollToAbout = () => {
-//       if (futureContentRef.current) {
-//         futureContentRef.current.scrollIntoView({ behavior: "smooth" });
-//       }
-//     };
-
-//     window.addEventListener("scrollToAbout", handleScrollToAbout);
-//     return () => window.removeEventListener("scrollToAbout", handleScrollToAbout);
-//   }, []);
-
-//   return (
-//     <>
-//       <Home scrollRef={futureContentRef} />
-//       {/* Future content will be added here later */}
-//     </>
-//   );
-// };
-
-// export default Landing;
-
-// // import React, { useEffect, useRef } from "react";
-// // import HeroSection from "../components/Hero/HeroSection";
-// // import AboutUs from "../components/Hero/AboutUs";
-// // import Testimonials from "../components/Hero/Testimonials";
-
-// // const Landing = () => {
-// //   const aboutUsRef = useRef(null);
-
-// //   useEffect(() => {
-// //     const handleScrollToAbout = () => {
-// //       if (aboutUsRef.current) {
-// //         aboutUsRef.current.scrollIntoView({ behavior: "smooth" });
-// //       }
-// //     };
-
-// //     window.addEventListener("scrollToAbout", handleScrollToAbout);
-// //     return () => window.removeEventListener("scrollToAbout", handleScrollToAbout);
-// //   }, []);
-
-// //   return (
-// //     <>
-// //       <HeroSection />
-// //       <Testimonials />
-// //       <AboutUs ref={aboutUsRef} />
-// //     </>
-// //   );
-// // };
-
-// // export default Landing;

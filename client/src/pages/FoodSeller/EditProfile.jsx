@@ -493,7 +493,6 @@ const EditProfile = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        required
                         className="Edit-FoodSeller-input"
                         disabled={changeCounters.email >= 1}
                     />
