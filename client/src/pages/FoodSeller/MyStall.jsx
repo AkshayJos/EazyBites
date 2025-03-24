@@ -10,7 +10,6 @@ import OrderCard from "../Order/OrderCard";
 import "./MyStall.css";
 
 // Import notification sounds
-// Add these audio files to your public folder
 const NOTIFICATION_SOUNDS = {
   newOrder: "/sounds/new-order.wav",
   orderUpdated: "/sounds/order-updated.wav",
