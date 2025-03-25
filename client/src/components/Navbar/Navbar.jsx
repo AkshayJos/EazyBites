@@ -23,7 +23,6 @@ const Navbar = () => {
         setUser(currentUser);
         setPhotoURL(currentUser.photoURL || dummyPhoto);
   
-        // Fetch extra user details from Firestore
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();

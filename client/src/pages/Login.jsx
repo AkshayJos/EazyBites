@@ -101,29 +101,9 @@ const Login = () => {
         navigate(`/signup?type=${type}`);
     };
 
-    // const redirectToSignup = async (user, isGoogleSignup) => {
-    //     try {
-    //         const userDocRef = doc(db, "users", user.uid);
-    //         const userDoc = await getDoc(userDocRef);
-
-    //         if (!userDoc.exists()) {
-    //             navigate(`/signup?type=${isGoogleSignup ? 'Foodie' : ''}`);
-    //             return false;
-    //         }
-    //         return true;
-    //     } catch (error) {
-    //         console.error("Error checking user:", error);
-    //         return false;
-    //     }
-    // };
-
     const handleGoogleLogin = async () => {
         try {
             const result = await signInWithPopup(auth, provider);
-            // const userExists = await redirectToSignup(result.user, true);
-            // if (userExists) {
-            //     navigate("/dashboard");
-            // }
             await redirectToDashboard(result.user);
         } catch (error) {
             console.error("Google Login Error:", error);
@@ -162,10 +142,6 @@ const Login = () => {
 
         try {
             const result = await confirmationResult.confirm(otp);
-            // const userExists = await redirectToSignup(result.user, false);
-            // if (userExists) {
-            //     navigate("/dashboard");
-            // }
             await redirectToDashboard(result.user);
         } catch (error) {
             console.error("OTP Verification Error:", error);

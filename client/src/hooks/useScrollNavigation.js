@@ -13,19 +13,17 @@ export const useScrollNavigation = () => {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
-      }, 100); // Small delay to ensure component is mounted
+      }, 100); // Delay to allow the page to render
     }
   }, [location]);
 
   const navigateAndScroll = (path, elementId) => {
     if (location.pathname === path) {
-      // If we're already on the target page, just scroll
       const element = document.getElementById(elementId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      // Navigate to the page with scroll target in state
       navigate(path, { state: { scrollTo: elementId } });
     }
   };

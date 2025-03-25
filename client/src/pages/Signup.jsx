@@ -178,7 +178,7 @@ const Signup = () => {
     };
 
     const handleResendOTP = async () => {
-        if (timer > 0) return; // Prevent multiple clicks when timer is active
+        if (timer > 0) return; // Prevent multiple clicks
 
         setIsButtonDisabled(true);
 
@@ -190,14 +190,14 @@ const Signup = () => {
 
             setConfirmationResult(confirmation);
             setIsVerifying(true);
-            setTimer(60); // Start countdown timer for resend
+            setTimer(60);
             console.log("OTP resent successfully");
         } catch (error) {
             console.error("Resend OTP Error:", error);
             alert("Error resending OTP. Please try again.");
         }
 
-        setIsButtonDisabled(false); // Ensure button is re-enabled
+        setIsButtonDisabled(false);
     };
 
     const verifyOtp = async () => {

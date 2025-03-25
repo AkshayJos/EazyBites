@@ -1,5 +1,3 @@
-/* FloatingImage.css */
-
 .floating-images-container {
   position: relative;
   width: 100%;
@@ -37,7 +35,6 @@
   border: 3px solid rgba(255, 255, 255, 0.9);
 }
 
-/* Media Queries for Responsive Design */
 @media (max-width: 1200px) {
   .floating-images-container {
     max-width: 650px;
@@ -54,7 +51,7 @@
     max-width: 550px;
     height: 300px;
   }
-  
+
   .floating-image-item {
     width: 90px;
     height: 90px;
@@ -70,14 +67,14 @@
     align-items: center;
     gap: 10px;
   }
-  
+
   .floating-image {
     position: relative;
     top: unset !important;
     left: unset !important;
     margin: 0 5px;
   }
-  
+
   .floating-image-item {
     width: 80px;
     height: 80px;
@@ -88,7 +85,7 @@
   .floating-images-container {
     height: 180px;
   }
-  
+
   .floating-image-item {
     width: 65px;
     height: 65px;
@@ -101,29 +98,14 @@
     height: 100px;
     padding: 0 10px;
   }
-  
+
   .floating-image-item {
     width: 65px;
     height: 65px;
   }
-  
+
   /* For very small screens, show only the first 3 images */
   .floating-image:nth-child(n+4) {
     display: none;
   }
 }
-
-/* .floating-image img {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid white;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease-in-out;
-  }
-  
-  .floating-image img:hover {
-    transform: scale(1.1);
-  }
-   */

@@ -16,7 +16,6 @@ const PrivacyPolicy = () => {
         }
     };
 
-    // Animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: { 
@@ -89,7 +88,6 @@ const PrivacyPolicy = () => {
     );
 };
 
-// Helper functions for content
 const getSectionTitle = (section) => {
     const titles = {
         1: "Information We Collect",

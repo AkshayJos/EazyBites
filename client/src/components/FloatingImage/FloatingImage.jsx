@@ -5,7 +5,6 @@ import "./FloatingImage.css";
 const FloatingImages = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
-  // Food image data with expanded metadata and wider positioning
   const foodImages = [
     { 
       id: 1, 
@@ -78,7 +77,6 @@ const FloatingImages = () => {
               delay: image.animationDelay * 0.1
             }
           }}
-          // Continuous floating animation
           whileInView={{
             y: [0, -15, 0],
             rotate: [0, 2, 0, -2, 0],

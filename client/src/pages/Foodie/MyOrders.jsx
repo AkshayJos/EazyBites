@@ -33,23 +33,16 @@ const MyOrders = () => {
   const fetchPastOrders = useCallback(async (userId, lastId = null) => {
     try {
       setHistoryLoading(true);
-      
-      // For now, we'll simulate the API response structure
-      const response = await axios.get(`${API}/orders/history/${userId}`, {
+            const response = await axios.get(`${API}/orders/history/${userId}`, {
         params: { lastOrderId: lastId || '' }
       });
       const data = response.data;
-      
-      // Process the API response
-      const newHistoryOrders = [];
-      
+      const newHistoryOrders = [];      
       for (const [orderId, orderData] of Object.entries(data.orders)) {
         newHistoryOrders.push({
           id: orderId,
           ...orderData,
           createdAt: orderData.orderTime,
-          // sellerName: orderData.stallName,
-          // totalAmount: orderData.price,
         });
       }
       
@@ -176,7 +169,6 @@ const MyOrders = () => {
     setLoading(true);
     
     // Query active orders where uid matches the current user
-    // This assumes orders in RTD have a uid field matching the user
     const activeOrdersRef = ref(database, 'orders');
     const activeOrdersQuery = query(
       activeOrdersRef, 
@@ -225,7 +217,7 @@ const MyOrders = () => {
     // Get current timestamp
     const cancelledAt = Date.now();
     
-    // 1. Update order status in Realtime Database
+    // order status in Realtime Database
     const orderRef = ref(database, `orders/${orderId}`);
     await update(orderRef, { status: "cancelled" });
     const orderSnapshot = await get(orderRef);
@@ -235,10 +227,9 @@ const MyOrders = () => {
       throw new Error("Order not found in Realtime Database");
     }
     
-    // Get the userOrderId from RTD which references the order document in Firestore
     const userOrderId = orderData.userOrderId;
     
-    // 2. Update order in Firestore (orders collection)
+    // Update order in Firestore (orders collection)
     const orderDocRef = doc(db, "orders", orderId);
     await updateDoc(orderDocRef, {
       status: 'cancelled',
@@ -246,7 +237,7 @@ const MyOrders = () => {
       cancellationReason: 'Cancelled by user'
     });
     
-    // 3. Update order in user's orders subcollection
+    //Update order in user's orders subcollection
     if (userOrderId) {
       const userOrderRef = doc(db, "users", auth.currentUser.uid, "orders", userOrderId);
       await updateDoc(userOrderRef, {
@@ -256,7 +247,7 @@ const MyOrders = () => {
       });
     }
     
-    // 4. Finally delete the order from Realtime Database after updating all references
+    //Finally delete the order from Realtime Database after updating all references
     await remove(orderRef);
     
     setCancelLoading(false);
@@ -288,13 +279,9 @@ const MyOrders = () => {
     }
   };
 
-  // Get formatted date string
   const formatDate = (timestamp) => {
     if (!timestamp) return "N/A";
-    
-    // Handle Firestore timestamp objects
     if (timestamp._seconds !== undefined && timestamp._nanoseconds !== undefined) {
-      // Convert to milliseconds
       const milliseconds = timestamp._seconds * 1000 + Math.floor(timestamp._nanoseconds / 1000000);
       const date = new Date(milliseconds);
       return date.toLocaleDateString('en-US', {
@@ -305,8 +292,7 @@ const MyOrders = () => {
         minute: '2-digit'
       });
     }
-    
-    // Handle regular JavaScript timestamps
+    // regular JS string timestamp
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -446,8 +432,7 @@ const MyOrders = () => {
   );
 };
 
-// Order Card Component with Image Carousel
-// Order Card Component with different handling for active orders vs history orders
+// Order Card Component
 const OrderCard = ({ order, foodItem, formatDate, getStatusInfo, images, isActiveOrder, onCancelOrder, cancelLoading }) => {
   const { text: statusText, color: statusColor } = getStatusInfo(order.status);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -492,8 +477,6 @@ const OrderCard = ({ order, foodItem, formatDate, getStatusInfo, images, isActiv
   
   // Handle rating submission
   const handleRatingSubmit = (rating) => {
-    // We'll let the modal handle the actual submission
-    // This is just for state updates if needed
     console.log(`Order ${order.id} rated: ${rating}`);
   };
   
@@ -576,10 +559,8 @@ const OrderCard = ({ order, foodItem, formatDate, getStatusInfo, images, isActiv
           </div>
         </div>
       ) : (
-        // History Order Card - API data structure
         <div className="MyOrders-card-content">
           <div className="MyOrders-card-image-container">
-            {/* Image carousel for history orders with multiple images */}
             {hasMultipleImages ? (
               <div className="MyOrders-carousel">
                 <div className="MyOrders-carousel-images">

@@ -55,7 +55,7 @@ const Menu = React.forwardRef((props, ref) => {
     
     let offset = index - centerIndex;
     
-    // Wrap around for circular effect
+    // Wrap around
     if (offset > totalItems / 2) offset -= totalItems;
     if (offset < -totalItems / 2) offset += totalItems;
     

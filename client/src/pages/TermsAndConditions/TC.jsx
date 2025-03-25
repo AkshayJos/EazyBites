@@ -82,13 +82,12 @@ const TermsAndConditions = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        {location.key !== "default" ? "Back" : "Go To Home"}
+        {location.key !== "default" ? "Back" : "Home"}
       </motion.button>
     </motion.div>
   );
 };
 
-// Helper functions for content - similar to PrivacyPolicy.jsx
 const getSectionTitle = (section) => {
   const titles = {
     1: "Introduction",
