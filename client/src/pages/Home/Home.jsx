@@ -267,9 +267,6 @@ const Home = ({ scrollRef }) => {
           </div>
         </div>
       </section>
-
-      {/* Placeholder ref for future section
-      <div ref={scrollRef} className="Home-future-section-placeholder"></div> */}
     </>
   );
 };

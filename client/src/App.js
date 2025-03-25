@@ -1,4 +1,3 @@
-// src/App.js
 import React from "react";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
@@ -21,28 +20,32 @@ import MyOrders from "./pages/Foodie/MyOrders";
 
 function App() {
   return (
-    <>
-      <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/food-seller" element={<FoodSeller />} />
-          <Route path="/foodie" element={<Foodie />} />
-          <Route path="/foodie-edit-profile" element={<EditProfileFoodie />} />
-          <Route path="/menu" element={<Menu />} />
-          <Route path="/seller-edit-profile" element={<EditProfileSeller />} />
-          <Route path="/seller-menu" element={<MyMenu />} />
-          <Route path="/my-stall" element={<MyStall />} />
-          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-          <Route path="/order" element={<Order />} />
-          <Route path="/my-orders" element={<MyOrders />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        </Routes>
-        <Footer />
-      </Router>
-    </>
+    <Router>
+      <div className="app-container">
+        <div className="content-wrapper">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/food-seller" element={<FoodSeller />} />
+            <Route path="/foodie" element={<Foodie />} />
+            <Route path="/foodie-edit-profile" element={<EditProfileFoodie />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/seller-edit-profile" element={<EditProfileSeller />} />
+            <Route path="/seller-menu" element={<MyMenu />} />
+            <Route path="/my-stall" element={<MyStall />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/order" element={<Order />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          </Routes>
+        </div>
+        <div className="footer-wrapper">
+          <Footer />
+        </div>
+      </div>
+    </Router>
   );
 }
 
