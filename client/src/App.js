@@ -17,6 +17,7 @@ import MyStall from "./pages/FoodSeller/MyStall";
 import Menu from "./pages/Foodie/Menu";
 import Order from "./pages/Order/Order";
 import MyOrders from "./pages/Foodie/MyOrders";
+import MyCategoryMenu from "./pages/FoodSeller/Category/MyCategoryMenu";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="/order" element={<Order />} />
             <Route path="/my-orders" element={<MyOrders />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/my-menu/category/:cid" element={<MyCategoryMenu />} />
           </Routes>
         </div>
         <div className="footer-wrapper">

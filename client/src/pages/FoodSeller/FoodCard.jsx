@@ -10,7 +10,7 @@ const FoodCard = ({ item, onEdit, onDelete }) => {
             exit={{ opacity: 0, y: -20 }}
             whileHover={{ scale: 1.02 }}
         >
-            <img src={item.photoURL} alt={item.name} className="MyMenu-card-image" />
+            <img src={item.photoURLs} alt={item.name} className="MyMenu-card-image" />
             <div className="MyMenu-card-content">
                 <div className="MyMenu-card-header">
                     <h3>{item.name}</h3>
@@ -21,7 +21,7 @@ const FoodCard = ({ item, onEdit, onDelete }) => {
                 </div>
                 <div className="MyMenu-card-actions">
                     <button onClick={() => onEdit(item)} className="MyMenu-edit-btn">Edit</button>
-                    <button onClick={() => onDelete(item.fid)} className="MyMenu-delete-btn">Delete</button>
+                    <button onClick={() => onDelete(item.id)} className="MyMenu-delete-btn">Delete</button>
                 </div>
             </div>
         </motion.div>

@@ -1,0 +1,81 @@
+.CategoryCard-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+    height: 100%;
+  }
+  
+  .CategoryCard-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  
+  .CategoryCard-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #2d3748;
+  }
+  
+  .CategoryCard-status {
+    margin-bottom: 15px;
+  }
+  
+  .CategoryCard-visibility {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+  
+  .CategoryCard-visible {
+    background-color: rgba(72, 187, 120, 0.2);
+    color: #2f855a;
+  }
+  
+  .CategoryCard-hidden {
+    background-color: rgba(245, 101, 101, 0.2);
+    color: #c53030;
+  }
+  
+  .CategoryCard-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+  }
+  
+  .CategoryCard-edit-btn,
+  .CategoryCard-delete-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    flex: 1;
+  }
+  
+  .CategoryCard-edit-btn {
+    background-color: #4299e1;
+    color: white;
+  }
+  
+  .CategoryCard-delete-btn {
+    background-color: #f56565;
+    color: white;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 640px) {
+    .CategoryCard-name {
+      font-size: 1rem;
+    }
+  
+    .CategoryCard-actions {
+      flex-direction: column;
+    }
+  }

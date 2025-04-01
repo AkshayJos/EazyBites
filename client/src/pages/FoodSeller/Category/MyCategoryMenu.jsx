@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import axios from 'axios';
-import { auth, db } from '../../firebaseConfig';
-import { useNavigate } from 'react-router-dom';
-import CategoryCard from './Category/CategoryCard';
-import CategoryModal from './Category/CategoryModal';
-import Loader from '../../components/Loader/Loader';
-import UnauthorizedPage from '../Unauthorized/Unauthorized';
-import './MyMenu.css';
+import { useParams } from 'react-router-dom';
+import { auth, db } from '../../../firebaseConfig';
+import FoodCard from '../FoodCard';
+import FoodModal from '../FoodModal';
+import Loader from '../../../components/Loader/Loader';
+import UnauthorizedPage from '../../Unauthorized/Unauthorized';
+import '../MyMenu.css';
 
 // API URL
 const API = process.env.REACT_APP_API;
@@ -22,21 +22,22 @@ const EmptyState = () => (
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
     >
-        <h3>No Categories Added Yet</h3>
-        <p>Start adding categories using the + button below!</p>
+        <h3>No Items in This Category Yet</h3>
+        <p>Start adding items to this category using the + button below!</p>
     </motion.div>
 );
 
-const MyMenu = () => {
-    const navigate = useNavigate();
-    const [categories, setCategories] = useState([]);
+const MyCategoryMenu = () => {
+    const { cid } = useParams(); // Get category ID from URL
+    const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [authLoading, setAuthLoading] = useState(true);
     const [lastDoc, setLastDoc] = useState(null);
     const [hasMore, setHasMore] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [modalMode, setModalMode] = useState('add');
+    const [categoryName, setCategoryName] = useState('');
     const [authState, setAuthState] = useState({
         isAuthenticated: false,
         isAuthorized: false,
@@ -148,18 +149,23 @@ const MyMenu = () => {
         return () => unsubscribe();
     }, []);
 
-    const fetchCategories = async (isInitial = false) => {
+    const fetchCategoryItems = async (isInitial = false) => {
         try {
             const response = await axios.get(
-                `${API}/categories/${auth.currentUser.uid}?${lastDoc && !isInitial ? `lastDoc=${lastDoc}&` : ''}limit=10`
+                `${API}/categories/${auth.currentUser.uid}/${cid}/items?${lastDoc && !isInitial ? `lastDoc=${lastDoc}&` : ''}limit=10`
             );
             const data = response.data;
 
-            setCategories(isInitial ? data.categories : [...categories, ...data.categories]);
+            // Fetch category name if it's the first load
+            if (isInitial && data.categoryName) {
+                setCategoryName(data.categoryName);
+            }
+
+            setItems(isInitial ? data.items : [...items, ...data.items]);
             setLastDoc(data.lastDoc);
             setHasMore(data.hasMore);
         } catch (error) {
-            console.error('Error fetching categories:', error);
+            console.error('Error fetching category items:', error);
         } finally {
             setLoading(false);
         }
@@ -167,60 +173,71 @@ const MyMenu = () => {
 
     useEffect(() => {
         if (authState.isAuthenticated && authState.isAuthorized) {
-            fetchCategories(true);
+            fetchCategoryItems(true);
         } else if (!authLoading) {
             setLoading(false);
         }
     }, [authState.isAuthenticated, authState.isAuthorized, authLoading]);
 
-    const handleAddCategory = async (formData) => {
+    const handleAddItem = async (formData) => {
         try {
-            await axios.post(`${API}/categories/${auth.currentUser.uid}/add`, formData);
+            // Include category ID when adding an item
+            await axios.post(`${API}/categories/${auth.currentUser.uid}/items/${cid}/add`, formData);
             setIsModalOpen(false);
-            fetchCategories(true);
+            fetchCategoryItems(true);
         } catch (error) {
-            console.error('Error adding category:', error);
+            console.error('Error adding item:', error);
         }
     };
 
-    const handleEditCategory = async (formData) => {
+    const handleEditItem = async (formData) => {
         try {
-            await axios.put(`${API}/categories/${auth.currentUser.uid}/update/${selectedCategory.id}`, formData);
+            // await axios.put(`${API}/categories/${auth.currentUser.uid}/items/${cid}/update/${selectedItem.fid}`, formData);
+            await axios.put(`${API}/seller/${auth.currentUser.uid}/update/${cid}/${selectedItem.fid}`, formData);
             setIsModalOpen(false);
-            setSelectedCategory(null);
-            fetchCategories(true);
+            setSelectedItem(null);
+            fetchCategoryItems(true);
         } catch (error) {
-            console.error('Error updating category:', error);
+            console.error('Error updating item:', error);
         }
     };
 
-    const handleDeleteCategory = async (categoryId) => {
-        if (window.confirm('Are you sure you want to delete this category?')) {
+    const handleDeleteItem = async (fid) => {
+        if (window.confirm('Are you sure you want to delete this item?')) {
             try {
-                await axios.delete(`${API}/categories/${auth.currentUser.uid}/delete/${categoryId}`);
-                fetchCategories(true);
+                await axios.delete(`${API}/seller/${auth.currentUser.uid}/item/${cid}/${fid}`);
+                fetchCategoryItems(true);
             } catch (error) {
-                console.error('Error deleting category:', error);
+                console.error('Error deleting item:', error);
             }
         }
     };
 
-    const handleCategoryClick = (category) => {
-        // TODO: Implement navigation to category-specific food items page
-        navigate(`/my-menu/category/${category.id}`);
-        console.log('Clicked category:', category);
-    };
-
     const openAddModal = () => {
         setModalMode('add');
-        setSelectedCategory(null);
+        setSelectedItem(null);
         setIsModalOpen(true);
     };
 
-    const openEditModal = (category) => {
-        setModalMode('edit');
-        setSelectedCategory(category);
-        setIsModalOpen(true);
+    const openEditModal = async (item) => {
+        try {
+            // Fetch complete item details before opening modal
+            const response = await axios.get(`${API}/seller/${auth.currentUser.uid}/items/${cid}/${item.id}`);
+            setModalMode('edit');
+            setSelectedItem(response.data);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching item details:', error);
+            alert('Failed to load item details. Please try again.');
+        }
+    };
+
+    const handleModalSubmit = (formData) => {
+        if (modalMode === 'add') {
+            handleAddItem(formData);
+        } else {
+            handleEditItem(formData);
+        }
     };
 
     if (authLoading) {
@@ -246,25 +263,24 @@ const MyMenu = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <h1>Your Categories</h1>
-                <p className="MyMenu-header-subtitle">Manage your food categories</p>
+                <h1>{categoryName} Items</h1>
+                <p className="MyMenu-header-subtitle">Manage items in this category</p>
             </motion.header>
             {loading ? (
                 <Loader />
             ) : (
                 <>
-                    {categories.length === 0 ? (
+                    {items.length === 0 ? (
                         <EmptyState />
                     ) : (
                         <div className="MyMenu-grid">
                             <AnimatePresence>
-                                {categories.map(category => (
-                                    <CategoryCard
-                                        key={category.id}
-                                        category={category}
+                                {items.map(item => (
+                                    <FoodCard
+                                        key={item.fid}
+                                        item={item}
                                         onEdit={openEditModal}
-                                        onDelete={handleDeleteCategory}
-                                        onClick={() => handleCategoryClick(category)}
+                                        onDelete={handleDeleteItem}
                                     />
                                 ))}
                             </AnimatePresence>
@@ -274,7 +290,7 @@ const MyMenu = () => {
                     {hasMore && (
                         <motion.button
                             className="MyMenu-load-more"
-                            onClick={() => fetchCategories()}
+                            onClick={() => fetchCategoryItems()}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
@@ -289,18 +305,19 @@ const MyMenu = () => {
                         whileTap={{ scale: 0.9 }}
                     >
                         <span className="MyMenu-add-icon">+</span>
-                        <span className="MyMenu-add-text">Add category</span>
+                        <span className="MyMenu-add-text">Add food item</span>
                     </motion.button>
 
-                    <CategoryModal
+                    <FoodModal
                         isOpen={isModalOpen}
                         onClose={() => {
                             setIsModalOpen(false);
-                            setSelectedCategory(null);
+                            setSelectedItem(null);
                         }}
-                        onSubmit={modalMode === 'add' ? handleAddCategory : handleEditCategory}
-                        category={selectedCategory}
+                        onSubmit={handleModalSubmit}
+                        foodItem={selectedItem}
                         mode={modalMode}
+                        categoryId={cid}
                     />
                 </>
             )}
@@ -308,4 +325,4 @@ const MyMenu = () => {
     );
 };
 
-export default MyMenu;
+export default MyCategoryMenu;
