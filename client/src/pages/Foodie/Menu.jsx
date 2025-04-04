@@ -11,50 +11,103 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stallStatusRef = ref(database, "stallStatus");
+    // Renamed from stallStatusRef to vendorStatusRef
+    const vendorStatusRef = ref(database, "vendorStatus");
 
-    const fetchFoodItems = async (sellerId) => {
-      const myMenuRef = collection(db, `users/${sellerId}/myMenu`);
-      const myMenuSnapshot = await getDocs(myMenuRef);
-
-      const items = await Promise.all(
-        myMenuSnapshot.docs.map(async (menuDoc) => {
-          const foodItemId = menuDoc.data().foodItemId;
-          const foodItemRef = doc(db, "foodItems", foodItemId);
-          const foodItemSnap = await getDoc(foodItemRef);
-          return foodItemSnap.exists() ? { id: foodItemId, ...foodItemSnap.data() } : null;
-        })
-      );
-      return items.filter((item) => item !== null);
+    const fetchCategoryItems = async (vendorId, categoryId) => {
+      try {
+        // Navigate to the specific category's items collection
+        const categoryItemsRef = collection(
+          db, 
+          `users/${vendorId}/myMenu/${categoryId}/categoryItems`
+        );
+        const categoryItemsSnapshot = await getDocs(categoryItemsRef);
+        
+        // Map through the food items in this category
+        return categoryItemsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          vendorId: vendorId,
+          categoryId: categoryId,
+        }));
+      } catch (error) {
+        console.error(`Error fetching category items for vendor ${vendorId}, category ${categoryId}:`, error);
+        return [];
+      }
     };
 
-    const handleStallStatusUpdate = async (snapshot) => {
+    const fetchVendorCategories = async (vendorId) => {
+      try {
+        // Get all categories for this vendor
+        const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
+        const categoriesSnapshot = await getDocs(categoriesRef);
+        
+        return categoriesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error(`Error fetching categories for vendor ${vendorId}:`, error);
+        return [];
+      }
+    };
+
+    const handleVendorStatusUpdate = async (snapshot) => {
       setLoading(true);
-      const stalls = snapshot.val();
+      const vendors = snapshot.val();
       
-      if (!stalls) {
+      if (!vendors) {
         setFoodItems([]);
         setLoading(false);
         return;
       }
 
-      const liveSellers = Object.entries(stalls)
+      // Get all live vendors
+      const liveVendors = Object.entries(vendors)
         .filter(([_, isLive]) => isLive)
-        .map(([sellerId]) => sellerId);
+        .map(([vendorId]) => vendorId);
 
+      // For each live vendor, check the categories
       const allFoodItems = [];
-      for (const sellerId of liveSellers) {
-        const sellerFoodItems = await fetchFoodItems(sellerId);
-        allFoodItems.push(...sellerFoodItems);
+      for (const vendorId of liveVendors) {
+        // Check categoryStatus in realtime database
+        const categoryStatusRef = ref(database, `categoryStatus/${vendorId}`);
+        
+        try {
+          // Get snapshot of category status
+          const categoryStatusSnapshot = await new Promise((resolve, reject) => {
+            onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
+          });
+          
+          const categoryStatus = categoryStatusSnapshot.val();
+          
+          if (!categoryStatus) continue;
+          
+          // Get all categories for this vendor
+          const vendorCategories = await fetchVendorCategories(vendorId);
+          
+          // For each active category, fetch its items
+          for (const category of vendorCategories) {
+            // Check if category is active in RTD
+            if (categoryStatus[category.id] === true) {
+              const categoryItems = await fetchCategoryItems(vendorId, category.id);
+              allFoodItems.push(...categoryItems);
+            }
+          }
+        } catch (error) {
+          console.error(`Error processing vendor ${vendorId}:`, error);
+        }
       }
 
       setFoodItems(allFoodItems);
       setLoading(false);
     };
 
-    onValue(stallStatusRef, handleStallStatusUpdate);
+    onValue(vendorStatusRef, handleVendorStatusUpdate);
 
-    return () => off(stallStatusRef, "value", handleStallStatusUpdate);
+    return () => {
+      // Clean up listeners when component unmounts
+      off(vendorStatusRef);
+    };
   }, []);
 
   // Loading animation variants
@@ -100,7 +153,7 @@ const Menu = () => {
         ) : foodItems.length > 0 ? (
           foodItems.map((item) => (
             <motion.div
-              key={item.id}
+              key={`${item.vendorId}-${item.categoryId}-${item.id}`}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
@@ -115,7 +168,7 @@ const Menu = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            Stalls are closed currently.
+            No vendors are open currently.
           </motion.p>
         )}
       </div>

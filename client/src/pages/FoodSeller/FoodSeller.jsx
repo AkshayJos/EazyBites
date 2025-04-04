@@ -61,7 +61,7 @@ const FoodSeller = () => {
 
     const updateStallStatus = async (uid, status) => {
         try {
-            const stallStatusRef = ref(database, `stallStatus/${uid}`);
+            const stallStatusRef = ref(database, `vendorStatus/${uid}`);
             await set(stallStatusRef, status);
             console.log(`Stall status updated to ${status}`);
         } catch (error) {

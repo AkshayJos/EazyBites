@@ -135,7 +135,7 @@ const MyStall = () => {
         });
         
         // Fetch stall status
-        const storeRef = ref(database, `stallStatus/${currentUser.uid}`);
+        const storeRef = ref(database, `vendorStatus/${currentUser.uid}`);
         const statusListener = onValue(storeRef, (snapshot) => {
           setIsLive(snapshot.val() || false);
         });
@@ -289,7 +289,7 @@ const MyStall = () => {
     setIsLive(newStatus); // Optimistically update UI
     
     try {
-      await set(ref(database, `stallStatus/${user.uid}`), newStatus);
+      await set(ref(database, `vendorStatus/${user.uid}`), newStatus);
     } catch (error) {
       console.error("Error toggling stall status:", error);
       setIsLive(!newStatus); // Revert UI if operation fails
