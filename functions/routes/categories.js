@@ -80,11 +80,18 @@ router.post("/:uid/add", async (req, res) => {
 
     await categoryRef.set(category);
 
-    // Add visibility status to Realtime Database
+    // Determine vendor type based on category name
+    const vendorType = categoryName.toLowerCase() === "stall" ? "stall" : "shop";
+
+    // Add visibility status to original path
     const categoryStatusRef = realtimeDB.ref(`categoryStatus/${uid}/${categoryId}`);
     await categoryStatusRef.set(visibility ?? true);
 
-    res.status(201).json({id: categoryId, ...category});
+    // Add simple key-value pair to vendorType
+    const vendorTypeRef = realtimeDB.ref(`vendorType/${uid}`);
+    await vendorTypeRef.set(vendorType);
+
+    res.status(201).json({id: categoryId, ...category, vendorType});
   } catch (error) {
     console.error("Error creating category:", error);
     res.status(500).json({error: "Failed to create category"});

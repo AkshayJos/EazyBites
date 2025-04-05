@@ -10,8 +10,84 @@
 .Menu-heading {
   font-size: 28px;
   font-weight: bold;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   color: #333;
+}
+
+/* Search and Navigation */
+.Menu-search-nav {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.Menu-search {
+  flex: 1;
+  max-width: 500px;
+  margin-right: 20px;
+}
+
+.Menu-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 30px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.Menu-search-input:focus {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+}
+
+.Menu-nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.Menu-nav-button {
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Menu-nav-button:hover {
+  background-color: #eee;
+}
+
+.Menu-nav-button.active {
+  background-color: #ff6b6b;
+  color: white;
+  border-color: #ff6b6b;
+}
+
+/* Back button */
+.Menu-back-button {
+  background-color: transparent;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  align-self: flex-start;
+  transition: color 0.3s;
+}
+
+.Menu-back-button:hover {
+  color: #ff6b6b;
 }
 
 /* Grid Layout */
@@ -89,7 +165,28 @@
   
   .Menu-heading {
     font-size: 24px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .Menu-search-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .Menu-search {
+    max-width: 100%;
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .Menu-nav-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .Menu-nav-button {
+    padding: 8px 16px;
+    font-size: 14px;
   }
 }
 
@@ -105,7 +202,17 @@
   
   .Menu-heading {
     font-size: 22px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .Menu-search-input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  
+  .Menu-nav-buttons {
+    flex-wrap: wrap;
+    gap: 8px;
   }
   
   .loading-text {
