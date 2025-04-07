@@ -28,6 +28,7 @@ const sellerMenuRoutes = require("./routes/sellerMenu");
 const foodRoutes = require("./routes/food");
 const orderRoutes = require("./routes/orders");
 const categoriesRoutes = require("./routes/categories");
+const searchRoutes = require("./routes/search");
 
 // Use routes
 app.use("/users", userRoutes);
@@ -35,6 +36,7 @@ app.use("/seller", sellerMenuRoutes);
 app.use("/food", foodRoutes);
 app.use("/orders", orderRoutes);
 app.use("/categories", categoriesRoutes);
+app.use("/search", searchRoutes);
 
 // Export API
 exports.api = onRequest(app);

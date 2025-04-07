@@ -10,8 +10,12 @@
 .Menu-heading {
   font-size: 28px;
   font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
+  margin-top: 10px;
+  font-size: 3rem;
+  color: #ff6a1c;
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
 }
 
 /* Search and Navigation */
@@ -203,6 +207,7 @@
   .Menu-heading {
     font-size: 22px;
     margin-bottom: 16px;
+    
   }
   
   .Menu-search-input {

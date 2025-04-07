@@ -8,15 +8,78 @@ import CategoryCard from "./Category/CategoryCard";
 import { motion } from "framer-motion";
 import "./Menu.css";
 
+// API
+const API = process.env.REACT_APP_API;
+
 const Menu = () => {
   const [foodItems, setFoodItems] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [activeView, setActiveView] = useState("food"); // "food", "stalls", "shops", "categories"
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVendorId, setSelectedVendorId] = useState(null);
   const [vendorType, setVendorType] = useState(null); // "stall" or "shop"
+  const [searchResults, setSearchResults] = useState(null); // To store search API results
+
+  // Debounce function to limit API calls
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  // Debounced search function
+  const debouncedSearch = React.useCallback(
+    debounce((query) => {
+      if (query.trim().length > 0) {
+        fetchSearchResults(query);
+      } else {
+        setSearchResults(null);
+      }
+    }, 300),
+    []
+  );
+
+  // Function to fetch search results from API
+  const fetchSearchResults = async (query) => {
+    setSearchLoading(true);
+    try {
+      const response = await fetch(`${API}/search?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Search API request failed');
+      }
+      
+      const data = await response.json();
+      // Assuming the API returns an array of food item IDs (fids)
+      setSearchResults(data.results);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
 
   useEffect(() => {
     // Fetch food items function (your original code)
@@ -82,10 +145,9 @@ const Menu = () => {
       };
     };
 
-    // Fetch vendor categories helper (reused from original code)
+    // Helper functions (unchanged)
     const fetchVendorCategories = async (vendorId) => {
       try {
-        // Get all categories for this vendor
         const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
         const categoriesSnapshot = await getDocs(categoriesRef);
         
@@ -99,17 +161,14 @@ const Menu = () => {
       }
     };
 
-    // Fetch category items helper (reused from original code)
     const fetchCategoryItems = async (vendorId, categoryId) => {
       try {
-        // Navigate to the specific category's items collection
         const categoryItemsRef = collection(
           db, 
           `users/${vendorId}/myMenu/${categoryId}/categoryItems`
         );
         const categoryItemsSnapshot = await getDocs(categoryItemsRef);
         
-        // Map through the food items in this category
         return categoryItemsSnapshot.docs.map(doc => ({
           id: doc.id,
           vendorId: vendorId,
@@ -125,7 +184,6 @@ const Menu = () => {
     const fetchVendorsByType = async (type) => {
       setLoading(true);
       try {
-        // Reference to vendorStatus in RTD to check live vendors
         const vendorStatusRef = ref(database, "vendorStatus");
         const vendorStatusSnapshot = await new Promise((resolve, reject) => {
           onValue(vendorStatusRef, resolve, { onlyOnce: true }, reject);
@@ -133,7 +191,6 @@ const Menu = () => {
         
         const vendorStatus = vendorStatusSnapshot.val() || {};
         
-        // Reference to vendorType in RTD to check vendor types
         const vendorTypeRef = ref(database, "vendorType");
         const vendorTypeSnapshot = await new Promise((resolve, reject) => {
           onValue(vendorTypeRef, resolve, { onlyOnce: true }, reject);
@@ -141,7 +198,6 @@ const Menu = () => {
         
         const vendorTypes = vendorTypeSnapshot.val() || {};
         
-        // Filter vendors by type and live status
         const typeVendors = Object.entries(vendorTypes)
           .filter(([vendorId, vendorType]) => 
             vendorType.toLowerCase() === type.toLowerCase() && 
@@ -158,86 +214,127 @@ const Menu = () => {
       }
     };
 
-    // Load appropriate data based on active view
-    if (activeView === "food") {
-      fetchFoodItems();
-    } else if (activeView === "stalls") {
-      fetchVendorsByType("stall");
-    } else if (activeView === "shops") {
-      fetchVendorsByType("shop");
-    } else if (activeView === "categories") {
-      // This will be handled by the vendorClickHandler
-      if (!selectedVendorId) {
-        setActiveView("shops");
+    // Only load non-search data if no search query is active
+    if (!searchQuery.trim()) {
+      // Load appropriate data based on active view
+      if (activeView === "food") {
+        fetchFoodItems();
+      } else if (activeView === "stalls") {
+        fetchVendorsByType("stall");
+      } else if (activeView === "shops") {
+        fetchVendorsByType("shop");
+      } else if (activeView === "categories") {
+        // This will be handled by the vendorClickHandler
+        if (!selectedVendorId) {
+          setActiveView("shops");
+        }
       }
     }
 
-  }, [activeView, selectedVendorId]);
+  }, [activeView, selectedVendorId, searchQuery]);
 
-  // This code should be integrated into the handleVendorClick function in your Menu component
-// It ensures that the vendorType is determined correctly when a vendor is clicked
-
-const handleVendorClick = async (vendorId, vendorData) => {
-  setSelectedVendorId(vendorId);
-  setLoading(true);
-  
-  try {
-    // Determine vendor type from RTD if not already set
-    let currentVendorType = vendorType;
-    if (!currentVendorType) {
-      const vendorTypeRef = ref(database, `vendorType/${vendorId}`);
-      const vendorTypeSnapshot = await new Promise((resolve, reject) => {
-        onValue(vendorTypeRef, resolve, { onlyOnce: true }, reject);
-      });
-      
-      currentVendorType = vendorTypeSnapshot.val()?.toLowerCase() || "shop";
-      setVendorType(currentVendorType);
-    }
+  const handleVendorClick = async (vendorId, vendorData) => {
+    setSelectedVendorId(vendorId);
+    setLoading(true);
     
-    if (currentVendorType === "stall") {
-      // For stalls, directly show food items from the "Stall" category
-      try {
-        // Find the "Stall" category
-        const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
-        const categoriesSnapshot = await getDocs(categoriesRef);
+    try {
+      // Determine vendor type from RTD if not already set
+      let currentVendorType = vendorType;
+      if (!currentVendorType) {
+        const vendorTypeRef = ref(database, `vendorType/${vendorId}`);
+        const vendorTypeSnapshot = await new Promise((resolve, reject) => {
+          onValue(vendorTypeRef, resolve, { onlyOnce: true }, reject);
+        });
         
-        const stallCategory = categoriesSnapshot.docs.find(doc => 
-          doc.data().name?.toLowerCase() === "stall"
-        );
-        
-        if (stallCategory) {
-          // Check if this category is active in RTD
-          const categoryStatusRef = ref(database, `categoryStatus/${vendorId}/${stallCategory.id}`);
-          const categoryStatusSnapshot = await new Promise((resolve, reject) => {
-            onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
-          });
+        currentVendorType = vendorTypeSnapshot.val()?.toLowerCase() || "shop";
+        setVendorType(currentVendorType);
+      }
+      
+      if (currentVendorType === "stall") {
+        // For stalls, directly show food items from the "Stall" category
+        try {
+          // Find the "Stall" category
+          const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
+          const categoriesSnapshot = await getDocs(categoriesRef);
           
-          const isCategoryActive = categoryStatusSnapshot.val() === true;
+          const stallCategory = categoriesSnapshot.docs.find(doc => 
+            doc.data().name?.toLowerCase() === "stall"
+          );
           
-          if (isCategoryActive) {
-            // Get items from this category
-            const categoryItemsRef = collection(
-              db, 
-              `users/${vendorId}/myMenu/${stallCategory.id}/categoryItems`
-            );
-            const categoryItemsSnapshot = await getDocs(categoryItemsRef);
+          if (stallCategory) {
+            // Check if this category is active in RTD
+            const categoryStatusRef = ref(database, `categoryStatus/${vendorId}/${stallCategory.id}`);
+            const categoryStatusSnapshot = await new Promise((resolve, reject) => {
+              onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
+            });
             
-            const stallItems = categoryItemsSnapshot.docs.map(doc => ({
-              id: doc.id,
-              vendorId: vendorId,
-              categoryId: stallCategory.id,
-            }));
+            const isCategoryActive = categoryStatusSnapshot.val() === true;
             
-            setFoodItems(stallItems);
-            setActiveView("food");
+            if (isCategoryActive) {
+              // Get items from this category
+              const categoryItemsRef = collection(
+                db, 
+                `users/${vendorId}/myMenu/${stallCategory.id}/categoryItems`
+              );
+              const categoryItemsSnapshot = await getDocs(categoryItemsRef);
+              
+              const stallItems = categoryItemsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                vendorId: vendorId,
+                categoryId: stallCategory.id,
+              }));
+              
+              setFoodItems(stallItems);
+              setActiveView("food");
+            } else {
+              // Category is not active
+              setFoodItems([]);
+              setActiveView("food");
+            }
           } else {
-            // Category is not active
-            setFoodItems([]);
+            // Get all active categories and their items
+            const allItems = [];
+            const categoryStatusRef = ref(database, `categoryStatus/${vendorId}`);
+            const categoryStatusSnapshot = await new Promise((resolve, reject) => {
+              onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
+            });
+            
+            const categoryStatus = categoryStatusSnapshot.val() || {};
+            
+            for (const category of categoriesSnapshot.docs) {
+              if (categoryStatus[category.id] === true) {
+                const categoryItemsRef = collection(
+                  db, 
+                  `users/${vendorId}/myMenu/${category.id}/categoryItems`
+                );
+                const categoryItemsSnapshot = await getDocs(categoryItemsRef);
+                
+                const items = categoryItemsSnapshot.docs.map(doc => ({
+                  id: doc.id,
+                  vendorId: vendorId,
+                  categoryId: category.id,
+                }));
+                
+                allItems.push(...items);
+              }
+            }
+            
+            setFoodItems(allItems);
             setActiveView("food");
           }
-        } else {
-          // Get all active categories and their items
-          const allItems = [];
+        } catch (error) {
+          console.error("Error fetching stall items:", error);
+          setFoodItems([]);
+          setActiveView("food");
+        }
+      } else {
+        // For shops, show categories
+        try {
+          // Get all categories for this vendor
+          const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
+          const categoriesSnapshot = await getDocs(categoriesRef);
+          
+          // Check if categories are active
           const categoryStatusRef = ref(database, `categoryStatus/${vendorId}`);
           const categoryStatusSnapshot = await new Promise((resolve, reject) => {
             onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
@@ -245,69 +342,28 @@ const handleVendorClick = async (vendorId, vendorData) => {
           
           const categoryStatus = categoryStatusSnapshot.val() || {};
           
-          for (const category of categoriesSnapshot.docs) {
-            if (categoryStatus[category.id] === true) {
-              const categoryItemsRef = collection(
-                db, 
-                `users/${vendorId}/myMenu/${category.id}/categoryItems`
-              );
-              const categoryItemsSnapshot = await getDocs(categoryItemsRef);
-              
-              const items = categoryItemsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                vendorId: vendorId,
-                categoryId: category.id,
-              }));
-              
-              allItems.push(...items);
-            }
-          }
+          // Filter active categories
+          const activeCategories = categoriesSnapshot.docs
+            .filter(doc => categoryStatus[doc.id] === true)
+            .map(doc => ({
+              id: doc.id,
+              vendorId: vendorId,
+            }));
           
-          setFoodItems(allItems);
-          setActiveView("food");
+          setCategories(activeCategories);
+          setActiveView("categories");
+        } catch (error) {
+          console.error("Error fetching shop categories:", error);
+          setCategories([]);
+          setActiveView("categories");
         }
-      } catch (error) {
-        console.error("Error fetching stall items:", error);
-        setFoodItems([]);
-        setActiveView("food");
       }
-    } else {
-      // For shops, show categories
-      try {
-        // Get all categories for this vendor
-        const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
-        const categoriesSnapshot = await getDocs(categoriesRef);
-        
-        // Check if categories are active
-        const categoryStatusRef = ref(database, `categoryStatus/${vendorId}`);
-        const categoryStatusSnapshot = await new Promise((resolve, reject) => {
-          onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
-        });
-        
-        const categoryStatus = categoryStatusSnapshot.val() || {};
-        
-        // Filter active categories
-        const activeCategories = categoriesSnapshot.docs
-          .filter(doc => categoryStatus[doc.id] === true)
-          .map(doc => ({
-            id: doc.id,
-            vendorId: vendorId,
-          }));
-        
-        setCategories(activeCategories);
-        setActiveView("categories");
-      } catch (error) {
-        console.error("Error fetching shop categories:", error);
-        setCategories([]);
-        setActiveView("categories");
-      }
+    } catch (error) {
+      console.error("Error in vendor click handler:", error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error in vendor click handler:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Handle when a category is clicked
   const handleCategoryClick = async (vendorId, categoryId) => {
@@ -335,48 +391,25 @@ const handleVendorClick = async (vendorId, vendorData) => {
     }
   };
 
-  // Filter function for search
-  const getFilteredItems = () => {
-    if (!searchQuery.trim()) {
-      if (activeView === "food") return foodItems;
-      if (activeView === "stalls" || activeView === "shops") return vendors;
-      if (activeView === "categories") return categories;
-      return [];
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-    
-    // Filter based on active view
-    if (activeView === "food") {
-      // Since we don't have food item names in the state, this would require additional fetching
-      // For now, we'll return all items (in a real app, you'd want to fetch and filter by name)
-      return foodItems;
-    } else if (activeView === "stalls" || activeView === "shops") {
-      // For vendors, we can't filter here since we only have IDs
-      // In a real app, you might want to fetch names and filter
-      return vendors;
-    } else if (activeView === "categories") {
-      // For categories, we can't filter here since we only have IDs
-      // In a real app, you might want to fetch names and filter
-      return categories;
-    }
-    
-    return [];
-  };
-
   // View toggle handlers
   const showAllFood = () => {
+    setSearchQuery("");
+    setSearchResults(null);
     setSelectedVendorId(null);
     setActiveView("food");
   };
 
   const showStalls = () => {
+    setSearchQuery("");
+    setSearchResults(null);
     setSelectedVendorId(null);
     setVendorType("stall");
     setActiveView("stalls");
   };
 
   const showShops = () => {
+    setSearchQuery("");
+    setSearchResults(null);
     setSelectedVendorId(null);
     setVendorType("shop");
     setActiveView("shops");
@@ -429,7 +462,25 @@ const handleVendorClick = async (vendorId, vendorData) => {
     }
   };
 
-  const filteredItems = getFilteredItems();
+  // Get items to display based on search status
+  const getDisplayItems = () => {
+    // If there's an active search, show search results
+    if (searchQuery.trim() && searchResults) {
+      // Transform search results into the format expected by Card component
+      return searchResults.map(fid => ({ id: fid }));
+    }
+
+    // Otherwise show regular items based on view
+    if (activeView === "food") return foodItems;
+    if (activeView === "stalls" || activeView === "shops") return vendors;
+    if (activeView === "categories") return categories;
+    return [];
+  };
+
+  const displayItems = getDisplayItems();
+
+  // Determine if we're in search mode
+  const isSearchMode = searchQuery.trim().length > 0;
 
   return (
     <div className="Menu-container">
@@ -440,36 +491,40 @@ const handleVendorClick = async (vendorId, vendorData) => {
         <div className="Menu-search">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search food items..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             className="Menu-search-input"
           />
         </div>
-        <div className="Menu-nav-buttons">
-          <button 
-            className={`Menu-nav-button ${activeView === "food" && !selectedVendorId ? "active" : ""}`}
-            onClick={showAllFood}
-          >
-            All Food
-          </button>
-          <button 
-            className={`Menu-nav-button ${activeView === "stalls" ? "active" : ""}`}
-            onClick={showStalls}
-          >
-            Stalls
-          </button>
-          <button 
-            className={`Menu-nav-button ${activeView === "shops" ? "active" : ""}`}
-            onClick={showShops}
-          >
-            Shops
-          </button>
-        </div>
+        
+        {/* Only show navigation buttons when not searching */}
+        {!isSearchMode && (
+          <div className="Menu-nav-buttons">
+            <button 
+              className={`Menu-nav-button ${activeView === "food" && !selectedVendorId ? "active" : ""}`}
+              onClick={showAllFood}
+            >
+              All Food
+            </button>
+            <button 
+              className={`Menu-nav-button ${activeView === "stalls" ? "active" : ""}`}
+              onClick={showStalls}
+            >
+              Stalls
+            </button>
+            <button 
+              className={`Menu-nav-button ${activeView === "shops" ? "active" : ""}`}
+              onClick={showShops}
+            >
+              Shops
+            </button>
+          </div>
+        )}
       </div>
       
-      {/* Back button when viewing categories or items */}
-      {getBackButtonText() && (
+      {/* Back button when viewing categories or items and not searching */}
+      {!isSearchMode && getBackButtonText() && (
         <button className="Menu-back-button" onClick={handleBack}>
           ← {getBackButtonText()}
         </button>
@@ -477,7 +532,21 @@ const handleVendorClick = async (vendorId, vendorData) => {
       
       {/* Content area */}
       <div className="Menu-grid">
-        {loading ? (
+        {isSearchMode && searchLoading ? (
+          <motion.div 
+            className="Menu-loading"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+          >
+            <div className="loading-text">Searching for delicious options</div>
+            <div className="loading-dots">
+              <motion.span variants={dotVariants} className="dot">●</motion.span>
+              <motion.span variants={dotVariants} className="dot">●</motion.span>
+              <motion.span variants={dotVariants} className="dot">●</motion.span>
+            </div>
+          </motion.div>
+        ) : loading && !isSearchMode ? (
           <motion.div 
             className="Menu-loading"
             initial="hidden"
@@ -491,56 +560,77 @@ const handleVendorClick = async (vendorId, vendorData) => {
               <motion.span variants={dotVariants} className="dot">●</motion.span>
             </div>
           </motion.div>
-        ) : filteredItems.length > 0 ? (
+        ) : displayItems.length > 0 ? (
           <>
-            {/* Food items view */}
-            {activeView === "food" && 
-              filteredItems.map((item) => (
-                <motion.div
-                  key={`${item.vendorId}-${item.categoryId}-${item.id}`}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card fid={item.id} />
-                </motion.div>
-              ))
-            }
+            {/* Search results */}
+            {isSearchMode && (
+              <>
+                {displayItems.map((item) => (
+                  <motion.div
+                    key={`search-${item.id}`}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Card fid={item.id} />
+                  </motion.div>
+                ))}
+              </>
+            )}
             
-            {/* Stalls or Shops view */}
-            {(activeView === "stalls" || activeView === "shops") && 
-              filteredItems.map((vendorId) => (
-                <motion.div
-                  key={vendorId}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <VendorCard 
-                    vendorid={vendorId} 
-                    onVendorClick={() => handleVendorClick(vendorId)} 
-                  />
-                </motion.div>
-              ))
-            }
-            
-            {/* Categories view */}
-            {activeView === "categories" && 
-              filteredItems.map((category) => (
-                <motion.div
-                  key={`${category.vendorId}-${category.id}`}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CategoryCard 
-                    vendorId={category.vendorId} 
-                    categoryId={category.id} 
-                    onCategoryClick={handleCategoryClick} 
-                  />
-                </motion.div>
-              ))
-            }
+            {/* Regular views when not searching */}
+            {!isSearchMode && (
+              <>
+                {/* Food items view */}
+                {activeView === "food" && 
+                  displayItems.map((item) => (
+                    <motion.div
+                      key={`${item.vendorId || "search"}-${item.categoryId || "result"}-${item.id}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Card fid={item.id} />
+                    </motion.div>
+                  ))
+                }
+                
+                {/* Stalls or Shops view */}
+                {(activeView === "stalls" || activeView === "shops") && 
+                  displayItems.map((vendorId) => (
+                    <motion.div
+                      key={vendorId}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <VendorCard 
+                        vendorid={vendorId} 
+                        onVendorClick={() => handleVendorClick(vendorId)} 
+                      />
+                    </motion.div>
+                  ))
+                }
+                
+                {/* Categories view */}
+                {activeView === "categories" && 
+                  displayItems.map((category) => (
+                    <motion.div
+                      key={`${category.vendorId}-${category.id}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CategoryCard 
+                        vendorId={category.vendorId} 
+                        categoryId={category.id} 
+                        onCategoryClick={handleCategoryClick} 
+                      />
+                    </motion.div>
+                  ))
+                }
+              </>
+            )}
           </>
         ) : (
           <motion.p 
@@ -549,10 +639,16 @@ const handleVendorClick = async (vendorId, vendorData) => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {activeView === "food" ? "No food items available." :
-             activeView === "stalls" ? "No stalls are open currently." :
-             activeView === "shops" ? "No shops are open currently." :
-             "No categories available."}
+            {isSearchMode 
+              ? "No matching food items found. Try a different search term."
+              : activeView === "food" 
+                ? "No food items available." 
+                : activeView === "stalls" 
+                  ? "No stalls are open currently." 
+                  : activeView === "shops" 
+                    ? "No shops are open currently." 
+                    : "No categories available."
+            }
           </motion.p>
         )}
       </div>
