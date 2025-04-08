@@ -61,7 +61,6 @@ const CategoryCard = ({ vendorId, categoryId, onCategoryClick }) => {
       </div>
       <div className="category-card-content">
         <h3 className="category-card-name">{categoryData.categoryName || "Unnamed Category"}</h3>
-        <p className="category-card-description">{categoryData.description || "No description available"}</p>
       </div>
     </motion.div>
   );

@@ -420,7 +420,7 @@ const Menu = () => {
     if (activeView === "food" && selectedVendorId) {
       return vendorType === "shop" ? "Back to Categories" : "Back to Stalls";
     } else if (activeView === "categories") {
-      return "Back to Shops";
+      return "Back to Cafes";
     }
     return null;
   };
@@ -517,7 +517,7 @@ const Menu = () => {
               className={`Menu-nav-button ${activeView === "shops" ? "active" : ""}`}
               onClick={showShops}
             >
-              Shops
+              Cafes
             </button>
           </div>
         )}

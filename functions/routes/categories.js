@@ -6,6 +6,7 @@ const router = express.Router();
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 const admin = require("firebase-admin"); // Add this to access the Realtime Database
 const db = getFirestore();
+const {getStorage} = require("firebase-admin/storage");
 
 // API
 const API = process.env.API_URL;
@@ -63,10 +64,10 @@ router.get("/:uid/:cid", async (req, res) => {
 router.post("/:uid/add", async (req, res) => {
   try {
     const {uid} = req.params;
-    const {categoryName, visibility} = req.body;
+    const {categoryName, visibility, photoURL} = req.body;
 
-    if (!categoryName) {
-      return res.status(400).json({error: "Category name is required"});
+    if (!categoryName || !photoURL) {
+      return res.status(400).json({error: "Category name or image is missing."});
     }
 
     // Create the category in Firestore
@@ -75,6 +76,7 @@ router.post("/:uid/add", async (req, res) => {
     const category = {
       categoryName,
       visibility: visibility ?? true,
+      photoURL,
       createdAt: FieldValue.serverTimestamp(),
     };
 
@@ -102,11 +104,12 @@ router.post("/:uid/add", async (req, res) => {
 router.put("/:uid/update/:cid", async (req, res) => {
   try {
     const {uid, cid} = req.params;
-    const {categoryName, visibility} = req.body;
+    const {categoryName, visibility, photoURL} = req.body;
 
     const updateData = {};
     if (categoryName) updateData.categoryName = categoryName;
     if (visibility !== undefined) updateData.visibility = visibility;
+    if (photoURL) updateData.photoURL = photoURL;
 
     // Update in Firestore
     await db.collection("users").doc(uid).collection("myMenu").doc(cid).update(updateData);
@@ -135,6 +138,10 @@ router.delete("/:uid/delete/:cid", async (req, res) => {
       return res.status(404).json({error: "Category not found"});
     }
 
+    // Get the category data to extract the photoURL
+    const categoryData = categorySnapshot.data();
+    const photoURL = categoryData.photoURL;
+
     // Fetch all food items in this category
     const categoryItemsRef = categoryRef.collection("categoryItems");
     const categoryItemsSnapshot = await categoryItemsRef.get();
@@ -145,6 +152,23 @@ router.delete("/:uid/delete/:cid", async (req, res) => {
       console.log(`${API}/seller/${uid}/item/${cid}/${foodItemId}`);
       await axios.delete(`${API}/seller/${uid}/item/${cid}/${foodItemId}`);
     }));
+
+    // Delete the category image from Cloud Storage if it exists
+    if (photoURL) {
+      try {
+        const storage = getStorage();
+        const bucket = storage.bucket();
+
+        // Extract the file path from the URL using the same method as in food item deletion
+        const filePath = decodeURIComponent(photoURL.split("/o/")[1].split("?")[0]);
+        await bucket.file(filePath).delete();
+
+        console.log(`Deleted category image: ${filePath}`);
+      } catch (storageError) {
+        // Log the error but continue with category deletion
+        console.error("Error deleting image from storage:", storageError);
+      }
+    }
 
     // Delete the category itself from Firestore
     await categoryRef.delete();

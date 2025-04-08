@@ -4,7 +4,8 @@ import PhoneInput from 'react-phone-input-2';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage, auth, db } from '../../firebaseConfig';
+import { storage, auth, db, database } from '../../firebaseConfig';
+import { ref as Ref, get } from 'firebase/database';
 import { RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, PhoneAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import './EditProfile.css';
@@ -52,6 +53,7 @@ const EditProfile = () => {
         authError: null,
         userData: null
     });
+    const [vendorType, setVendorType] = useState('stall');
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -108,6 +110,15 @@ const EditProfile = () => {
                     });
                     setAuthLoading(false);
                     return;
+                }
+
+                // Check vendor type in the real-time database
+                const vendorTypeRef = Ref(database, `vendorType/${user.uid}`);
+                const vendorTypeSnapshot = await get(vendorTypeRef);
+
+                if (vendorTypeSnapshot.exists()) {
+                    const type = vendorTypeSnapshot.val();
+                    setVendorType(type);
                 }
 
                 // User is authenticated and authorized
@@ -236,7 +247,7 @@ const EditProfile = () => {
         const files = Array.from(e.target.files);
 
         if (formData.stallPhotos.length + files.length > MAX_STALL_PHOTOS) {
-            setError(`Maximum ${MAX_STALL_PHOTOS} stall photos allowed`);
+            setError(`Maximum ${MAX_STALL_PHOTOS} ${vendorType === 'shop' ? 'Cafe' : 'Stall'} photos allowed`);
             return;
         }
 
@@ -412,6 +423,10 @@ const EditProfile = () => {
         return <Loader />;
     }
 
+    // Dynamic text based on vendor type
+    const stallOrCafe = vendorType === 'shop' ? 'Cafe' : 'Stall';
+
+
     return (
         <motion.div
             className="Edit-FoodSeller-container"
@@ -555,7 +570,7 @@ const EditProfile = () => {
                 )}
 
                 <div className="Edit-FoodSeller-form-group">
-                    <label>Stall Name</label>
+                    <label>{stallOrCafe} Name</label>
                     <input
                         type="text"
                         name="stallName"
@@ -567,7 +582,7 @@ const EditProfile = () => {
                 </div>
 
                 <div className="Edit-FoodSeller-form-group">
-                    <label>Stall Description</label>
+                    <label>{stallOrCafe} Description</label>
                     <textarea
                         name="stallDescription"
                         value={formData.stallDescription}
@@ -591,7 +606,7 @@ const EditProfile = () => {
                 </div>
 
                 <div className="Edit-FoodSeller-form-group">
-                    <label>Stall Photos (Max 5 photos, 3MB each)</label>
+                    <label>{stallOrCafe} Photos (Max 5 photos, 3MB each)</label>
                     <div className="Edit-FoodSeller-stall-photos">
                         {formData.stallPhotos.map((photo, index) => (
                             <motion.div
@@ -601,7 +616,7 @@ const EditProfile = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <img src={photo} alt={`Stall ${index + 1}`} className="Edit-FoodSeller-stall-photo" />
+                                <img src={photo} alt={`{stallOrCafe} ${index + 1}`} className="Edit-FoodSeller-stall-photo" />
                                 <button
                                     type="button"
                                     onClick={() => removeStallPhoto(index)}

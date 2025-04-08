@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { ref, set } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { auth, db, database } from '../../firebaseConfig';
 import Loader from '../../components/Loader/Loader';
 import './FoodSeller.css';
@@ -14,6 +14,7 @@ const FoodSeller = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [vendorType, setVendorType] = useState('stall');
 
     useEffect(() => {
         const checkUserAndType = async (firebaseUser) => {
@@ -32,6 +33,15 @@ const FoodSeller = () => {
                 } else if (userDoc.data().signupType !== 'Food Seller' && userDoc.data().signupType === 'Foodie') {
                     navigate('/foodie');
                     return;
+                }
+
+                // Check vendor type in the real-time database
+                const vendorTypeRef = ref(database, `vendorType/${firebaseUser.uid}`);
+                const vendorTypeSnapshot = await get(vendorTypeRef);
+                
+                if (vendorTypeSnapshot.exists()) {
+                    const type = vendorTypeSnapshot.val();
+                    setVendorType(type);
                 }
 
                 setUser({
@@ -63,9 +73,9 @@ const FoodSeller = () => {
         try {
             const stallStatusRef = ref(database, `vendorStatus/${uid}`);
             await set(stallStatusRef, status);
-            console.log(`Stall status updated to ${status}`);
+            console.log(`${vendorType === 'shop' ? 'Cafe' : 'Stall'} status updated to ${status}`);
         } catch (error) {
-            console.error("Error updating stall status:", error);
+            console.error(`Error updating ${vendorType === 'shop' ? 'cafe' : 'stall'} status:`, error);
         }
     };
 
@@ -157,6 +167,9 @@ const FoodSeller = () => {
 
     if (!user) return null;
 
+    // Dynamic text based on vendor type
+    const stallOrCafe = vendorType === 'shop' ? 'Cafe' : 'Stall';
+
     return (
         <div className="foodSellerDash-container">
             <AnimatePresence>
@@ -203,7 +216,7 @@ const FoodSeller = () => {
                     <svg className="foodSellerDash-icon" viewBox="0 0 24 24" width="24" height="24">
                         <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
                     </svg>
-                    <span>My Stall</span>
+                    <span>My {stallOrCafe}</span>
                 </motion.div>
 
                 <motion.div

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { ref, get } from "firebase/database";
+import { db, database } from "../../firebaseConfig";
 import "./Navbar.css";
 import { useScrollNavigation } from '../../hooks/useScrollNavigation';
 
@@ -14,6 +15,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [signupType, setSignupType] = useState(null);
   const [photoURL, setPhotoURL] = useState("");
+  const [vendorType, setVendorType] = useState("stall"); // Default to 'stall'
 
   const dummyPhoto = "images/dummy-user-image.jpg";
 
@@ -27,6 +29,21 @@ const Navbar = () => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setSignupType(userData.signupType);
+          
+          // Check vendor type if user is a Food Seller
+          if (userData.signupType === "Food Seller") {
+            try {
+              const vendorTypeRef = ref(database, `vendorType/${currentUser.uid}`);
+              const vendorTypeSnapshot = await get(vendorTypeRef);
+              
+              if (vendorTypeSnapshot.exists()) {
+                const type = vendorTypeSnapshot.val();
+                setVendorType(type);
+              }
+            } catch (error) {
+              console.error("Error fetching vendor type:", error);
+            }
+          }
   
           // Force a state update to trigger re-render of profile pic
           setTimeout(() => {
@@ -37,13 +54,13 @@ const Navbar = () => {
         setUser(null);
         setSignupType(null);
         setPhotoURL(dummyPhoto);
+        setVendorType("stall"); // Reset to default
       }
     });
   
     return () => unsubscribe();
   }, [auth]);
   
-
   const handleLogoClick = () => {
     if (!user) {
       navigate("/");
@@ -55,6 +72,9 @@ const Navbar = () => {
   const handleAboutUsClick = () => {
     navigateAndScroll('/', 'Menu');
   };
+
+  // Dynamic text based on vendor type
+  const stallOrCafe = vendorType === 'shop' ? 'Cafe' : 'Stall';
 
   return (
     <nav className="nav-container">
@@ -74,7 +94,7 @@ const Navbar = () => {
               className="nav-button"
               onClick={() => navigate(signupType === "Foodie" ? "/my-orders" : "/my-stall")}
             >
-              {signupType === "Foodie" ? "My Orders" : "My Stall"}
+              {signupType === "Foodie" ? "My Orders" : `My ${stallOrCafe}`}
             </button>
           </>
         ) : (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ref, set, onValue, off, query, orderByChild, equalTo } from "firebase/database";
+import { ref, get, set, onValue, off, query, orderByChild, equalTo } from "firebase/database";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, database, db } from "../../firebaseConfig";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,7 @@ const MyStall = () => {
     authError: null,
     userData: null
   });
+  const [vendorType, setVendorType] = useState('stall');
   const navigate = useNavigate();
 
   // Initialize Audio elements
@@ -124,6 +125,15 @@ const MyStall = () => {
           });
           setLoading(false);
           return;
+        }
+
+        // Check vendor type in the real-time database
+        const vendorTypeRef = ref(database, `vendorType/${currentUser.uid}`);
+        const vendorTypeSnapshot = await get(vendorTypeRef);
+
+        if (vendorTypeSnapshot.exists()) {
+          const type = vendorTypeSnapshot.val();
+          setVendorType(type);
         }
 
         // User is authenticated and authorized
@@ -335,9 +345,12 @@ const MyStall = () => {
     );
   }
 
+  // Dynamic text based on vendor type
+  const stallOrCafe = vendorType === 'shop' ? 'Cafe' : 'Stall';
+
   return (
     <div className="MyStall-container">
-      <h1 className="MyStall-heading">My Stall</h1>
+      <h1 className="MyStall-heading">My {stallOrCafe}</h1>
       <div className="MyStall-status">
         Current status: <span className={isLive ? "MyStall-live" : "MyStall-offline"}>
           {isLive ? "Live" : "Offline"}
@@ -345,7 +358,7 @@ const MyStall = () => {
       </div>
       <div className="MyStall-toggle-container">
         <div className="MyStall-toggle-item">
-          <span>Set Stall Live</span>
+          <span>Set {stallOrCafe} Live</span>
           <label className="MyStall-switch">
             <input 
               type="checkbox" 

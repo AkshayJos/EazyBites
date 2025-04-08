@@ -8,14 +8,14 @@ const {getFirestore} = require("firebase-admin/firestore");
 const db = getFirestore();
 
 // Priority fields
-const priorities = [
-  "name", // 1. food name
-  "description", // 2. food description
-  "stallName", // 3. vendor's name
-  "categoryName", // 4. category name
-  "stallDescription", // 5. vendor's description
-  "landMark", // 6. vendor's landmark
-];
+// const priorities = [
+//   "name", // 1. food name
+//   "description", // 2. food description
+//   "categoryName", // 3. category name
+//   "stallName", // 4. vendor's name
+//   "stallDescription", // 5. vendor's description
+//   "landMark", // 6. vendor's landmark
+// ];
 
 // Helper function to compute priority rank
 function getMatchPriority(query, foodItem, vendorDetails, categoryDetails) {
@@ -23,8 +23,8 @@ function getMatchPriority(query, foodItem, vendorDetails, categoryDetails) {
 
   if (foodItem.name.toLowerCase().includes(q)) return 1;
   if (foodItem.description?.toLowerCase().includes(q)) return 2;
-  if (vendorDetails.stallName?.toLowerCase().includes(q)) return 3;
-  if (categoryDetails.categoryName?.toLowerCase().includes(q)) return 4;
+  if (categoryDetails.categoryName?.toLowerCase().includes(q)) return 3;
+  if (vendorDetails.stallName?.toLowerCase().includes(q)) return 4;
   if (vendorDetails.stallDescription?.toLowerCase().includes(q)) return 5;
   if (vendorDetails.landMark?.toLowerCase().includes(q)) return 6;
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import "./CategoryCard.css";
 
-const CategoryCard = ({ category, onEdit, onDelete, onClick }) => {
+const CategoryCard = ({ category, onEdit, onDelete, onClick }) => {    
     return (
         <motion.div
             className="CategoryCard-container"
@@ -12,6 +12,16 @@ const CategoryCard = ({ category, onEdit, onDelete, onClick }) => {
             whileHover={{ scale: 1.02 }}
             onClick={onClick}
         >
+            <div className="CategoryCard-image-container">
+                <img 
+                    src={category.photoURL} 
+                    alt={category.categoryName} 
+                    className="CategoryCard-image" 
+                    onError={(e) => {
+                        e.target.src = '/api/placeholder/400/200';
+                    }}
+                />
+            </div>
             <div className="CategoryCard-content">
                 <h3 className="CategoryCard-name">{category.categoryName}</h3>
                 <div className="CategoryCard-status">
