@@ -223,6 +223,15 @@ router.get("/:uid/:cid/items", async (req, res) => {
     const {uid, cid} = req.params;
     const {limit = 10, lastDocId} = req.query;
 
+    // First, get the category document to include its name in the response
+    const categoryDoc = await db.collection("users")
+        .doc(uid)
+        .collection("myMenu")
+        .doc(cid)
+        .get();
+
+    const categoryName = categoryDoc.exists ? categoryDoc.data().name : "";
+
     let query = db.collection("users")
         .doc(uid)
         .collection("myMenu")
@@ -232,24 +241,47 @@ router.get("/:uid/:cid/items", async (req, res) => {
         .limit(Number(limit));
 
     if (lastDocId) {
-      const lastDoc = await db.collection("foodItems").doc(lastDocId).get();
-      if (lastDoc.exists) {
-        query = query.startAfter(lastDoc);
+      const lastDocRef = db.collection("users")
+          .doc(uid)
+          .collection("myMenu")
+          .doc(cid)
+          .collection("categoryItems")
+          .doc(lastDocId);
+
+      const lastDocSnap = await lastDocRef.get();
+      if (lastDocSnap.exists) {
+        query = query.startAfter(lastDocSnap);
       }
     }
 
     const snapshot = await query.get();
-    if (snapshot.empty) {
-      return res.json({items: [], hasMore: false});
+    const items = [];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const foodItemDoc = await db.collection("foodItems").doc(data.foodItemId).get();
+
+      if (foodItemDoc.exists) {
+        items.push({
+          fid: foodItemDoc.id,
+          ...foodItemDoc.data(),
+        });
+      }
     }
 
-    const foodItemIds = snapshot.docs.map((doc) => doc.data().foodItemId);
-    const foodItemsPromises = foodItemIds.map((id) => db.collection("foodItems").doc(id).get());
-    const foodItemsDocs = await Promise.all(foodItemsPromises);
-    const foodItems = foodItemsDocs.map((doc) => ({id: doc.id, ...doc.data()}));
+    // Return the last document ID for pagination
+    const lastDoc = snapshot.docs.length > 0 ?
+                    snapshot.docs[snapshot.docs.length - 1].id :
+                    null;
 
-    res.json({items: foodItems, hasMore: snapshot.docs.length === Number(limit)});
+    res.json({
+      items,
+      lastDoc,
+      hasMore: snapshot.docs.length === Number(limit),
+      categoryName,
+    });
   } catch (error) {
+    console.error("Failed to fetch category items:", error);
     res.status(500).json({error: "Failed to fetch category items"});
   }
 });

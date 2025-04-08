@@ -152,15 +152,20 @@ const MyCategoryMenu = () => {
     const fetchCategoryItems = async (isInitial = false) => {
         try {
             const response = await axios.get(
-                `${API}/categories/${auth.currentUser.uid}/${cid}/items?${lastDoc && !isInitial ? `lastDoc=${lastDoc}&` : ''}limit=10`
+                `${API}/categories/${auth.currentUser.uid}/${cid}/items`, {
+                    params: {
+                        limit: 10,
+                        lastDocId: isInitial ? null : lastDoc
+                    }
+                }
             );
             const data = response.data;
-
+    
             // Fetch category name if it's the first load
             if (isInitial && data.categoryName) {
                 setCategoryName(data.categoryName);
             }
-
+    
             setItems(isInitial ? data.items : [...items, ...data.items]);
             setLastDoc(data.lastDoc);
             setHasMore(data.hasMore);
