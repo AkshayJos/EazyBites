@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { ref, onValue, off } from "firebase/database";
+import React, { useState, useEffect, useRef } from "react";
+import { ref, onValue } from "firebase/database";
 import { collection, getDocs } from "firebase/firestore";
 import { database, db } from "../../firebaseConfig";
 import Card from "../../components/FoodItemCard/Card";
 import VendorCard from "./Vendor/VendorCard";
 import CategoryCard from "./Category/CategoryCard";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import "./Menu.css";
 
 // API
@@ -23,6 +23,12 @@ const Menu = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [vendorType, setVendorType] = useState(null); // "stall" or "shop"
   const [searchResults, setSearchResults] = useState(null);
+  const [vendorStatus, setVendorStatus] = useState({});
+  const [categoryStatuses, setCategoryStatuses] = useState({});
+  const [vendorTypes, setVendorTypes] = useState({});
+  const initialLoadCompleted = useRef(false);
+  const vendorsMapRef = useRef(new Map());
+  const categoriesMapRef = useRef(new Map());
 
   // Debounce function to limit API calls
   function debounce(func, wait) {
@@ -81,183 +87,474 @@ const Menu = () => {
     debouncedSearch(query);
   };
 
+  // Store the full item data with references for faster updates
+  const foodItemsMapRef = useRef(new Map());
+
+  // Set up real-time listeners for vendor types
   useEffect(() => {
-    // Fetch food items function
-    const fetchFoodItems = async () => {
-      setLoading(true);
-      try {
-        const vendorStatusRef = ref(database, "vendorStatus");
-        const vendorStatusSnapshot = await new Promise((resolve, reject) => {
-          onValue(vendorStatusRef, resolve, { onlyOnce: true }, reject);
-        });
-        
-        const vendors = vendorStatusSnapshot.val();
-        if (!vendors) {
-          setFoodItems([]);
-          setLoading(false);
-          return;
-        }
+    const vendorTypeRef = ref(database, "vendorType");
+    
+    const vendorTypeListener = onValue(vendorTypeRef, (snapshot) => {
+      const types = snapshot.val() || {};
+      setVendorTypes(types);
+      
+      // After initial load, update vendors if we're in stalls or shops view
+      if (initialLoadCompleted.current && (activeView === "stalls" || activeView === "shops") && !searchQuery.trim()) {
+        updateVendorsForType(activeView === "stalls" ? "stall" : "shop", types, vendorStatus);
+      }
+    });
+    
+    return () => {
+      vendorTypeListener();
+    };
+  }, [activeView, searchQuery]);
 
-        const liveVendors = Object.entries(vendors)
-          .filter(([_, isLive]) => isLive)
-          .map(([vendorId]) => vendorId);
-
-        const allFoodItems = [];
-        
-        // If a specific vendor is selected, only fetch its items
-        const targetVendors = selectedVendorId ? [selectedVendorId] : liveVendors;
-
-        for (const vendorId of targetVendors) {
-          const categoryStatusRef = ref(database, `categoryStatus/${vendorId}`);
-          const categoryStatusSnapshot = await new Promise((resolve, reject) => {
-            onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
-          });
+  // Set up real-time listeners for vendor status
+  useEffect(() => {
+    const vendorStatusRef = ref(database, "vendorStatus");
+    
+    const vendorStatusListener = onValue(vendorStatusRef, (snapshot) => {
+      const newStatus = snapshot.val() || {};
+      const prevStatus = vendorStatus;
+      
+      setVendorStatus(newStatus);
+      
+      // After initial load, handle gradual updates based on the active view
+      if (initialLoadCompleted.current && !searchQuery.trim()) {
+        if (activeView === "food") {
+          // Find vendors that changed status
+          const changedVendors = Object.keys({...prevStatus, ...newStatus}).filter(
+            vendorId => prevStatus[vendorId] !== newStatus[vendorId]
+          );
           
-          const categoryStatus = categoryStatusSnapshot.val();
-          if (!categoryStatus) continue;
-          
-          const vendorCategories = await fetchVendorCategories(vendorId);
-          
-          for (const category of vendorCategories) {
-            if (categoryStatus[category.id] === true && 
-                (!selectedCategoryId || selectedCategoryId === category.id)) {
-              const categoryItems = await fetchCategoryItems(vendorId, category.id);
-              allFoodItems.push(...categoryItems);
-            }
+          if (changedVendors.length > 0) {
+            // Update food items incrementally based on vendor status changes
+            updateFoodItemsForVendors(changedVendors, newStatus);
+          }
+        } else if (activeView === "stalls" || activeView === "shops") {
+          // Update vendors list based on type and new status
+          updateVendorsForType(activeView === "stalls" ? "stall" : "shop", vendorTypes, newStatus);
+        } else if (activeView === "categories" && selectedVendorId) {
+          // If selected vendor goes offline, clear categories
+          if (newStatus[selectedVendorId] !== true) {
+            setCategories([]);
+          } else {
+            // Otherwise refresh categories for the selected vendor
+            updateCategoriesForVendor(selectedVendorId, categoryStatuses);
           }
         }
-
-        setFoodItems(allFoodItems);
-      } catch (error) {
-        console.error("Error fetching food items:", error);
-        setFoodItems([]);
-      } finally {
-        setLoading(false);
       }
+    });
+    
+    return () => {
+      vendorStatusListener();
     };
+  }, [activeView, searchQuery, vendorStatus, vendorTypes, selectedVendorId]);
 
-    // Helper functions
-    const fetchVendorCategories = async (vendorId) => {
-      try {
+  // Listen for all category status changes globally
+  useEffect(() => {
+    const categoryStatusRef = ref(database, "categoryStatus");
+    
+    const categoryStatusListener = onValue(categoryStatusRef, (snapshot) => {
+      const newStatuses = snapshot.val() || {};
+      const prevStatuses = categoryStatuses;
+      
+      setCategoryStatuses(newStatuses);
+      
+      // After initial load, handle gradual updates based on the active view
+      if (initialLoadCompleted.current && !searchQuery.trim()) {
+        if (activeView === "food") {
+          // Find which vendors have category changes
+          const changedVendors = new Set();
+          
+          // Check all vendors in both previous and new statuses
+          const allVendors = new Set([
+            ...Object.keys(prevStatuses), 
+            ...Object.keys(newStatuses)
+          ]);
+          
+          allVendors.forEach(vendorId => {
+            const prevVendorCategories = prevStatuses[vendorId] || {};
+            const newVendorCategories = newStatuses[vendorId] || {};
+            
+            // Check if any category status changed for this vendor
+            const allCategories = new Set([
+              ...Object.keys(prevVendorCategories),
+              ...Object.keys(newVendorCategories)
+            ]);
+            
+            for (const categoryId of allCategories) {
+              if (prevVendorCategories[categoryId] !== newVendorCategories[categoryId]) {
+                changedVendors.add(vendorId);
+                break;
+              }
+            }
+          });
+          
+          // Update food items for vendors with changed categories
+          if (changedVendors.size > 0) {
+            updateFoodItemsForVendors(Array.from(changedVendors), vendorStatus, newStatuses);
+          }
+        } else if (activeView === "categories" && selectedVendorId) {
+          // Update categories for the selected vendor
+          updateCategoriesForVendor(selectedVendorId, newStatuses);
+        }
+      }
+    });
+    
+    return () => {
+      categoryStatusListener();
+    };
+  }, [activeView, searchQuery, vendorStatus, categoryStatuses, selectedVendorId]);
+
+  // Update vendors list based on type and status changes
+  const updateVendorsForType = (type, currentVendorTypes, currentVendorStatus) => {
+    try {
+      const updatedVendors = Object.entries(currentVendorTypes)
+        .filter(([vendorId, vendorType]) => 
+          vendorType.toLowerCase() === type.toLowerCase() && 
+          currentVendorStatus[vendorId] === true
+        )
+        .map(([vendorId]) => vendorId);
+      
+      setVendors(updatedVendors);
+    } catch (error) {
+      console.error(`Error updating ${type}s:`, error);
+    }
+  };
+
+  // Update categories list for a specific vendor
+  const updateCategoriesForVendor = async (vendorId, currentCategoryStatuses) => {
+    try {
+      if (!vendorId || vendorStatus[vendorId] !== true) {
+        setCategories([]);
+        return;
+      }
+      
+      // Get category status for this vendor
+      const vendorCategoryStatus = currentCategoryStatuses[vendorId] || {};
+      
+      // If we already have categories fetched for this vendor, update based on status
+      if (categoriesMapRef.current.has(vendorId)) {
+        const allVendorCategories = categoriesMapRef.current.get(vendorId);
+        
+        // Filter to only active categories
+        const activeCategories = allVendorCategories
+          .filter(category => vendorCategoryStatus[category.id] === true)
+          .map(category => ({
+            id: category.id,
+            vendorId: vendorId,
+          }));
+        
+        setCategories(activeCategories);
+      } else {
+        // Otherwise, fetch all categories and store them
         const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
         const categoriesSnapshot = await getDocs(categoriesRef);
         
-        return categoriesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-      } catch (error) {
-        console.error(`Error fetching categories for vendor ${vendorId}:`, error);
-        return [];
+        const allCategories = categoriesSnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            vendorId: vendorId,
+          }));
+        
+        // Store all categories for this vendor
+        categoriesMapRef.current.set(vendorId, allCategories);
+        
+        // Filter to only active categories
+        const activeCategories = allCategories
+          .filter(category => vendorCategoryStatus[category.id] === true);
+        
+        setCategories(activeCategories);
       }
-    };
-
-    const fetchCategoryItems = async (vendorId, categoryId) => {
-      try {
-        const categoryItemsRef = collection(
-          db, 
-          `users/${vendorId}/myMenu/${categoryId}/categoryItems`
-        );
-        const categoryItemsSnapshot = await getDocs(categoryItemsRef);
-        
-        return categoryItemsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          vendorId: vendorId,
-          categoryId: categoryId,
-        }));
-      } catch (error) {
-        console.error(`Error fetching category items for vendor ${vendorId}, category ${categoryId}:`, error);
-        return [];
-      }
-    };
-
-    // Fetch vendors by type
-    const fetchVendorsByType = async (type) => {
-      setLoading(true);
-      try {
-        const vendorStatusRef = ref(database, "vendorStatus");
-        const vendorStatusSnapshot = await new Promise((resolve, reject) => {
-          onValue(vendorStatusRef, resolve, { onlyOnce: true }, reject);
-        });
-        
-        const vendorStatus = vendorStatusSnapshot.val() || {};
-        
-        const vendorTypeRef = ref(database, "vendorType");
-        const vendorTypeSnapshot = await new Promise((resolve, reject) => {
-          onValue(vendorTypeRef, resolve, { onlyOnce: true }, reject);
-        });
-        
-        const vendorTypes = vendorTypeSnapshot.val() || {};
-        
-        const typeVendors = Object.entries(vendorTypes)
-          .filter(([vendorId, vendorType]) => 
-            vendorType.toLowerCase() === type.toLowerCase() && 
-            vendorStatus[vendorId] === true
-          )
-          .map(([vendorId]) => vendorId);
-        
-        setVendors(typeVendors);
-      } catch (error) {
-        console.error(`Error fetching ${type}s:`, error);
-        setVendors([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Load data based on view and search state
-    if (!searchQuery.trim()) {
-      if (activeView === "food") {
-        fetchFoodItems();
-      } else if (activeView === "stalls") {
-        fetchVendorsByType("stall");
-      } else if (activeView === "shops") {
-        fetchVendorsByType("shop");
-      } else if (activeView === "categories" && selectedVendorId) {
-        const fetchCategories = async () => {
-          setLoading(true);
-          try {
-            const categoriesRef = collection(db, `users/${selectedVendorId}/myMenu`);
-            const categoriesSnapshot = await getDocs(categoriesRef);
-            const categoryStatusRef = ref(database, `categoryStatus/${selectedVendorId}`);
-            const categoryStatusSnapshot = await new Promise((resolve, reject) => {
-              onValue(categoryStatusRef, resolve, { onlyOnce: true }, reject);
-            });
-            const categoryStatus = categoryStatusSnapshot.val() || {};
-            
-            const activeCategories = categoriesSnapshot.docs
-              .filter(doc => categoryStatus[doc.id] === true)
-              .map(doc => ({
-                id: doc.id,
-                vendorId: selectedVendorId,
-              }));
-            
-            setCategories(activeCategories);
-          } catch (error) {
-            console.error("Error fetching categories:", error);
-            setCategories([]);
-          } finally {
-            setLoading(false);
-          }
-        };
-        fetchCategories();
-      }
+    } catch (error) {
+      console.error("Error updating categories:", error);
+      setCategories([]);
     }
+  };
 
-  }, [activeView, selectedVendorId, selectedCategoryId, searchQuery]);
+  // Update food items incrementally based on status changes
+  const updateFoodItemsForVendors = async (changedVendors, currentVendorStatus, currentCategoryStatuses = categoryStatuses) => {
+    try {
+      // Remove food items for inactive vendors or vendors with inactive categories
+      if (selectedVendorId) {
+        // If a vendor is selected but went offline, clear everything
+        if (changedVendors.includes(selectedVendorId) && !currentVendorStatus[selectedVendorId]) {
+          setFoodItems([]);
+          return;
+        }
+      } else {
+        // For "All Food" view, filter out food items from inactive vendors
+        setFoodItems(prevItems => 
+          prevItems.filter(item => 
+            currentVendorStatus[item.vendorId] === true && 
+            (!currentCategoryStatuses[item.vendorId] || 
+             currentCategoryStatuses[item.vendorId][item.categoryId] === true)
+          )
+        );
+      }
+      
+      // Add new food items for newly active vendors
+      const vendorsToAdd = changedVendors.filter(vendorId => 
+        currentVendorStatus[vendorId] === true &&
+        (!selectedVendorId || selectedVendorId === vendorId)
+      );
+      
+      if (vendorsToAdd.length > 0) {
+        const newItems = [];
+        
+        for (const vendorId of vendorsToAdd) {
+          const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
+          const categoriesSnapshot = await getDocs(categoriesRef);
+          
+          const vendorCategoryStatuses = currentCategoryStatuses[vendorId] || {};
+          
+          for (const categoryDoc of categoriesSnapshot.docs) {
+            const categoryId = categoryDoc.id;
+            
+            if (vendorCategoryStatuses[categoryId] === true && 
+                (!selectedCategoryId || selectedCategoryId === categoryId)) {
+              
+              const categoryItemsRef = collection(
+                db, 
+                `users/${vendorId}/myMenu/${categoryId}/categoryItems`
+              );
+              const categoryItemsSnapshot = await getDocs(categoryItemsRef);
+              
+              const items = categoryItemsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                vendorId: vendorId,
+                categoryId: categoryId,
+              }));
+              
+              newItems.push(...items);
+            }
+          }
+        }
+        
+        // Merge new items with existing ones
+        setFoodItems(prevItems => {
+          // Create lookup for existing items to avoid duplicates
+          const existingItemIds = new Set(
+            prevItems.map(item => `${item.vendorId}-${item.categoryId}-${item.id}`)
+          );
+          
+          // Filter out any duplicates
+          const uniqueNewItems = newItems.filter(
+            item => !existingItemIds.has(`${item.vendorId}-${item.categoryId}-${item.id}`)
+          );
+          
+          return [...prevItems, ...uniqueNewItems];
+        });
+      }
+    } catch (error) {
+      console.error("Error updating food items:", error);
+    }
+  };
 
-  const handleVendorClick = async (vendorId) => {
-    setSelectedVendorId(vendorId);
-    setSelectedCategoryId(null);
+  // Initial fetch of food items
+  const fetchAllFoodItems = async (initialLoad = false) => {
+    if (searchQuery.trim()) return;
+    
     setLoading(true);
     
     try {
-      const vendorTypeRef = ref(database, `vendorType/${vendorId}`);
+      const allFoodItems = [];
+      
+      // Get all active vendors
+      const liveVendors = Object.entries(vendorStatus)
+        .filter(([_, isLive]) => isLive === true)
+        .map(([vendorId]) => vendorId);
+      
+      // If a specific vendor is selected, only use that vendor if it's active
+      const targetVendors = selectedVendorId 
+        ? (vendorStatus[selectedVendorId] === true ? [selectedVendorId] : [])
+        : liveVendors;
+      
+      if (targetVendors.length === 0) {
+        setFoodItems([]);
+        setLoading(false);
+        if (initialLoad) initialLoadCompleted.current = true;
+        return;
+      }
+
+      // Process each vendor
+      for (const vendorId of targetVendors) {
+        // Get this vendor's categories
+        const categoriesRef = collection(db, `users/${vendorId}/myMenu`);
+        const categoriesSnapshot = await getDocs(categoriesRef);
+        
+        // Get category statuses for this vendor
+        const vendorCategoryStatuses = categoryStatuses[vendorId] || {};
+        
+        // Store categories for this vendor for later use
+        const vendorCategories = categoriesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          vendorId: vendorId,
+        }));
+        categoriesMapRef.current.set(vendorId, vendorCategories);
+        
+        // Process each category
+        for (const categoryDoc of categoriesSnapshot.docs) {
+          const categoryId = categoryDoc.id;
+          
+          // Only include active categories that match selection (if any)
+          if (vendorCategoryStatuses[categoryId] === true && 
+              (!selectedCategoryId || selectedCategoryId === categoryId)) {
+            
+            // Get items in this category
+            const categoryItemsRef = collection(
+              db, 
+              `users/${vendorId}/myMenu/${categoryId}/categoryItems`
+            );
+            const categoryItemsSnapshot = await getDocs(categoryItemsRef);
+            
+            // Add the items to our collection
+            const items = categoryItemsSnapshot.docs.map(doc => ({
+              id: doc.id,
+              vendorId: vendorId,
+              categoryId: categoryId,
+            }));
+            
+            allFoodItems.push(...items);
+          }
+        }
+      }
+
+      setFoodItems(allFoodItems);
+      
+      // Mark initial load as complete
+      if (initialLoad) initialLoadCompleted.current = true;
+    } catch (error) {
+      console.error("Error fetching all food items:", error);
+      setFoodItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Process food items, vendors, or categories based on view
+  useEffect(() => {
+    const fetchAndProcessData = async () => {
+      if (searchQuery.trim()) return;
+      
+      setLoading(true);
+      initialLoadCompleted.current = false;
+      
+      try {
+        if (activeView === "food") {
+          await fetchAllFoodItems(true);
+        } else if (activeView === "stalls") {
+          await fetchVendorsByType("stall");
+        } else if (activeView === "shops") {
+          await fetchVendorsByType("shop");
+        } else if (activeView === "categories" && selectedVendorId) {
+          await fetchCategories();
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+        if (!initialLoadCompleted.current) initialLoadCompleted.current = true;
+      }
+    };
+    
+    fetchAndProcessData();
+  }, [activeView, selectedVendorId, selectedCategoryId]);
+
+  // Fetch vendors by type with real-time status
+  const fetchVendorsByType = async (type) => {
+    try {
+      if (!vendorStatus) {
+        setVendors([]);
+        return;
+      }
+      
+      // Get all vendor types
+      const vendorTypeRef = ref(database, "vendorType");
       const vendorTypeSnapshot = await new Promise((resolve, reject) => {
         onValue(vendorTypeRef, resolve, { onlyOnce: true }, reject);
       });
       
-      const currentVendorType = vendorTypeSnapshot.val()?.toLowerCase() || "shop";
+      const allVendorTypes = vendorTypeSnapshot.val() || {};
+      
+      // Store vendor types for future updates
+      setVendorTypes(allVendorTypes);
+      
+      // Filter to this type and active vendors
+      const typeVendors = Object.entries(allVendorTypes)
+        .filter(([vendorId, vendorType]) => 
+          vendorType.toLowerCase() === type.toLowerCase() && 
+          vendorStatus[vendorId] === true
+        )
+        .map(([vendorId]) => vendorId);
+      
+      setVendors(typeVendors);
+    } catch (error) {
+      console.error(`Error fetching ${type}s:`, error);
+      setVendors([]);
+    }
+  };
+
+  // Fetch categories with real-time status
+  const fetchCategories = async () => {
+    try {
+      if (!selectedVendorId || vendorStatus[selectedVendorId] !== true) {
+        setCategories([]);
+        return;
+      }
+      
+      const categoriesRef = collection(db, `users/${selectedVendorId}/myMenu`);
+      const categoriesSnapshot = await getDocs(categoriesRef);
+      
+      // Get category status for this vendor
+      const vendorCategoryStatus = categoryStatuses[selectedVendorId] || {};
+      
+      // Store all categories for this vendor
+      const allCategories = categoriesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        vendorId: selectedVendorId,
+      }));
+      
+      categoriesMapRef.current.set(selectedVendorId, allCategories);
+      
+      // Filter to only active categories
+      const activeCategories = allCategories
+        .filter(category => vendorCategoryStatus[category.id] === true);
+      
+      setCategories(activeCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setCategories([]);
+    }
+  };
+
+  const handleVendorClick = async (vendorId) => {
+    // Check if vendor is still active
+    if (vendorStatus[vendorId] !== true) {
+      console.log("This vendor is no longer active");
+      return;
+    }
+    
+    setSelectedVendorId(vendorId);
+    setSelectedCategoryId(null);
+    setLoading(true);
+    initialLoadCompleted.current = false;
+    
+    try {
+      // Get vendor type
+      let currentVendorType = vendorTypes[vendorId]?.toLowerCase();
+      
+      // If we don't have it in state, fetch it
+      if (!currentVendorType) {
+        const vendorTypeRef = ref(database, `vendorType/${vendorId}`);
+        const vendorTypeSnapshot = await new Promise((resolve, reject) => {
+          onValue(vendorTypeRef, resolve, { onlyOnce: true }, reject);
+        });
+        
+        currentVendorType = vendorTypeSnapshot.val()?.toLowerCase() || "shop";
+      }
+      
       setVendorType(currentVendorType);
       
       if (currentVendorType === "stall") {
@@ -273,8 +570,15 @@ const Menu = () => {
   };
 
   const handleCategoryClick = (vendorId, categoryId) => {
+    // Check if vendor and category are still active
+    if (vendorStatus[vendorId] !== true || categoryStatuses[vendorId]?.[categoryId] !== true) {
+      console.log("This vendor or category is no longer active");
+      return;
+    }
+    
     setSelectedCategoryId(categoryId);
     setActiveView("food");
+    initialLoadCompleted.current = false;
   };
 
   // View toggle handlers
@@ -284,6 +588,7 @@ const Menu = () => {
     setSelectedVendorId(null);
     setSelectedCategoryId(null);
     setActiveView("food");
+    initialLoadCompleted.current = false;
   };
 
   const showStalls = () => {
@@ -293,6 +598,7 @@ const Menu = () => {
     setSelectedCategoryId(null);
     setVendorType("stall");
     setActiveView("stalls");
+    initialLoadCompleted.current = false;
   };
 
   const showShops = () => {
@@ -302,6 +608,7 @@ const Menu = () => {
     setSelectedCategoryId(null);
     setVendorType("shop");
     setActiveView("shops");
+    initialLoadCompleted.current = false;
   };
 
   // Get back button text
@@ -330,6 +637,7 @@ const Menu = () => {
       setSelectedCategoryId(null);
       setActiveView("shops");
     }
+    initialLoadCompleted.current = false;
   };
 
   // Loading animation variants
@@ -354,6 +662,13 @@ const Menu = () => {
     }
   };
 
+  // Item animation variants
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2 } }
+  };
+
   // Get items to display
   const getDisplayItems = () => {
     if (searchQuery.trim() && searchResults) {
@@ -367,6 +682,18 @@ const Menu = () => {
 
   const displayItems = getDisplayItems();
   const isSearchMode = searchQuery.trim().length > 0;
+
+  // Generate a unique key for each item for AnimatePresence to work correctly
+  const getItemKey = (item, index) => {
+    if (activeView === "food") {
+      return `${item.vendorId || 'search'}-${item.categoryId || 'none'}-${item.id}`;
+    } else if (activeView === "stalls" || activeView === "shops") {
+      return item; // vendorId
+    } else if (activeView === "categories") {
+      return `${item.vendorId}-${item.id}`;
+    }
+    return index;
+  };
 
   return (
     <div className="Menu-container">
@@ -445,65 +772,81 @@ const Menu = () => {
         ) : displayItems.length > 0 ? (
           <>
             {isSearchMode && (
-              displayItems.map((item) => (
-                <motion.div
-                  key={`search-${item.id}`}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card fid={item.id} />
-                </motion.div>
-              ))
+              <AnimatePresence>
+                {displayItems.map((item, index) => (
+                  <motion.div
+                    key={`search-${item.id}`}
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                  >
+                    <Card fid={item.id} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             )}
             
             {!isSearchMode && (
               <>
-                {activeView === "food" && 
-                  displayItems.map((item) => (
-                    <motion.div
-                      key={`${item.vendorId}-${item.categoryId}-${item.id}`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Card fid={item.id} />
-                    </motion.div>
-                  ))
-                }
+                {activeView === "food" && (
+                  <AnimatePresence>
+                    {displayItems.map((item, index) => (
+                      <motion.div
+                        key={getItemKey(item, index)}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        layout
+                      >
+                        <Card fid={item.id} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
                 
-                {(activeView === "stalls" || activeView === "shops") && 
-                  displayItems.map((vendorId) => (
-                    <motion.div
-                      key={vendorId}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <VendorCard 
-                        vendorid={vendorId} 
-                        onVendorClick={() => handleVendorClick(vendorId)} 
-                      />
-                    </motion.div>
-                  ))
-                }
+                {(activeView === "stalls" || activeView === "shops") && (
+                  <AnimatePresence>
+                    {displayItems.map((vendorId, index) => (
+                      <motion.div
+                        key={getItemKey(vendorId, index)}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        layout
+                      >
+                        <VendorCard 
+                          vendorid={vendorId} 
+                          onVendorClick={() => handleVendorClick(vendorId)} 
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
                 
-                {activeView === "categories" && 
-                  displayItems.map((category) => (
-                    <motion.div
-                      key={`${category.vendorId}-${category.id}`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <CategoryCard 
-                        vendorId={category.vendorId} 
-                        categoryId={category.id} 
-                        onCategoryClick={handleCategoryClick} 
-                      />
-                    </motion.div>
-                  ))
-                }
+                {activeView === "categories" && (
+                  <AnimatePresence>
+                    {displayItems.map((category, index) => (
+                      <motion.div
+                        key={getItemKey(category, index)}
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        layout
+                      >
+                        <CategoryCard 
+                          vendorId={category.vendorId} 
+                          categoryId={category.id} 
+                          onCategoryClick={handleCategoryClick} 
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
               </>
             )}
           </>
@@ -519,7 +862,7 @@ const Menu = () => {
               : activeView === "food" 
                 ? "No food items available." 
                 : activeView === "stalls" 
-                  ? "No stalls are open currently." 
+                  ? "No stalls are open currently."
                   : activeView === "shops" 
                     ? "No shops are open currently." 
                     : "No categories available."
