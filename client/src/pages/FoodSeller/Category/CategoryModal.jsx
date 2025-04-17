@@ -5,7 +5,7 @@ import { storage } from '../../../firebaseConfig';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
-const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add' }) => {
+const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add', vendorType }) => {
     const [formData, setFormData] = useState({
         categoryName: '',
         visible: true,
@@ -15,6 +15,9 @@ const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add' }) =>
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+
+    // Determine if category name should be editable
+    const isCategoryNameEditable = !(vendorType === 'stall' && mode === 'edit');
 
     useEffect(() => {
         if (category && mode === 'edit') {
@@ -52,6 +55,19 @@ const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add' }) =>
         if (!file.type.startsWith('image/')) {
             setError(`File ${file.name} is not an image`);
             return false;
+        }
+        return true;
+    };
+
+    const validateCategoryName = (name) => {
+        if (vendorType === 'shop') {
+            const categoryName = name.toLowerCase();
+            const restrictedNames = ['stall', 'stalls'];
+            
+            if (restrictedNames.includes(categoryName) || categoryName.includes('stall')) {
+                setError('Category name cannot be "stall", "stalls", or contain words with similar meaning.');
+                return false;
+            }
         }
         return true;
     };
@@ -120,6 +136,12 @@ const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add' }) =>
         setIsSubmitting(true);
         setError('');
 
+        // Validate category name based on vendor type
+        if (!validateCategoryName(formData.categoryName)) {
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
             const uploadedURL = await uploadPhoto();
             await onSubmit({
@@ -158,7 +180,7 @@ const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add' }) =>
                     >
                         <h2>{mode === 'add' ? 'Add New Category' : 'Edit Category'}</h2>
                         {error && (
-                            <div className="MyMenu-error-message">
+                            <div className="MyMenu-error-message" style={{ color: 'red' }}>
                                 {error}
                             </div>
                         )}
@@ -169,8 +191,18 @@ const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add' }) =>
                                     type="text"
                                     required
                                     value={formData.categoryName}
-                                    onChange={e => setFormData({ ...formData, categoryName: e.target.value })}
+                                    onChange={e => {
+                                        setFormData({ ...formData, categoryName: e.target.value });
+                                        setError(''); // Clear error when user types
+                                    }}
+                                    disabled={!isCategoryNameEditable}
+                                    className={!isCategoryNameEditable ? "MyMenu-input-disabled" : ""}
                                 />
+                                {!isCategoryNameEditable && (
+                                    <small className="MyMenu-helper-text">
+                                        *Stalls cannot change their category name
+                                    </small>
+                                )}
                             </div>
                             
                             <div className="MyMenu-form-group">

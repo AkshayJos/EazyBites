@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
 import axios from 'axios';
-import { auth, db } from '../../firebaseConfig';
+import { auth, db, database } from '../../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import CategoryCard from './Category/CategoryCard';
 import CategoryModal from './Category/CategoryModal';
@@ -37,6 +38,7 @@ const MyMenu = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [modalMode, setModalMode] = useState('add');
+    const [vendorType, setVendorType] = useState(null);
     const [authState, setAuthState] = useState({
         isAuthenticated: false,
         isAuthorized: false,
@@ -118,6 +120,23 @@ const MyMenu = () => {
                     return;
                 }
 
+                try {
+                    const vendorTypeRef = ref(database, `vendorType/${user.uid}`);
+                    const vendorTypeSnapshot = await get(vendorTypeRef);
+                    
+                    if (vendorTypeSnapshot.exists()) {
+                        const vendorTypeValue = vendorTypeSnapshot.val();
+                        setVendorType(vendorTypeValue);
+                        console.log("VendorType: ", vendorTypeValue); // Use vendorTypeValue instead of vendorType state
+                    } else {
+                        console.log("No vendor type found in realtime database");
+                        setVendorType(null);
+                    }
+                } catch (rtdError) {
+                    console.error("Error fetching vendor type from realtime database:", rtdError);
+                    setVendorType(null);
+                }
+
                 // User is authenticated and authorized
                 setAuthState({
                     isAuthenticated: true,
@@ -175,6 +194,16 @@ const MyMenu = () => {
 
     const handleAddCategory = async (formData) => {
         try {
+            if (vendorType === 'shop') {
+                const categoryName = formData.categoryName.toLowerCase();
+                console.log(categoryName);
+                const restrictedNames = ['stall', 'stalls'];
+                
+                if (restrictedNames.includes(categoryName) || categoryName.includes('stall')) {
+                    alert('Category name cannot be "stall", "stalls", or contain words with similar meaning.');
+                    return;
+                }
+            }
             await axios.post(`${API}/categories/${auth.currentUser.uid}/add`, formData);
             setIsModalOpen(false);
             fetchCategories(true);
@@ -185,6 +214,15 @@ const MyMenu = () => {
 
     const handleEditCategory = async (formData) => {
         try {
+            if (vendorType === 'shop') {
+                const categoryName = formData.categoryName.toLowerCase();
+                const restrictedNames = ['stall', 'stalls'];
+                
+                if (restrictedNames.includes(categoryName) || categoryName.includes('stall')) {
+                    alert('Category name cannot be "stall", "stalls", or contain words with similar meaning.');
+                    return;
+                }
+            }
             await axios.put(`${API}/categories/${auth.currentUser.uid}/update/${selectedCategory.id}`, formData);
             setIsModalOpen(false);
             setSelectedCategory(null);
@@ -206,12 +244,15 @@ const MyMenu = () => {
     };
 
     const handleCategoryClick = (category) => {
-        // TODO: Implement navigation to category-specific food items page
         navigate(`/my-menu/category/${category.id}`);
         console.log('Clicked category:', category);
     };
 
     const openAddModal = () => {
+        if (vendorType === 'stall' && categories.length > 0) {
+            alert('Stalls can only have one category. You cannot add more categories.');
+            return;
+        }
         setModalMode('add');
         setSelectedCategory(null);
         setIsModalOpen(true);
@@ -301,6 +342,7 @@ const MyMenu = () => {
                         onSubmit={modalMode === 'add' ? handleAddCategory : handleEditCategory}
                         category={selectedCategory}
                         mode={modalMode}
+                        vendorType={vendorType}
                     />
                 </>
             )}
