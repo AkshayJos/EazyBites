@@ -130,6 +130,7 @@ const Menu = React.forwardRef((props, ref) => {
                   <motion.div
                     key={fid}
                     className={`Menu-card-wrapper ${index === centerIndex ? 'Menu-card-center' : ''}`}
+                    style={{ transformPerspective: 1000 }}
                     animate={getPositionStyles(index)}
                     initial={getPositionStyles(index)}
                     transition={{ 
