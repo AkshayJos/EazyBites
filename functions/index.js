@@ -22,6 +22,13 @@ require("dotenv-safe").config({
   example: ".env",
 });
 
+app.use(express.static(path.join(__dirname,"../client/build")));
+app.get('*',function(_,res){
+    res.sendFile(path.join(__dirname,"../client/build/index.html"),function(error){
+      res.status(500).send(error);
+    })
+})
+
 // import routes
 const userRoutes = require("./routes/users");
 const sellerMenuRoutes = require("./routes/sellerMenu");
@@ -38,5 +45,7 @@ app.use("/orders", orderRoutes);
 app.use("/categories", categoriesRoutes);
 app.use("/search", searchRoutes);
 
-// Export API
-exports.api = onRequest(app);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
