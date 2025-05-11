@@ -8,8 +8,7 @@
     "client": "cd client && npm start",
     "deploy": "npm run build-client && cross-env NODE_ENV=production firebase deploy",
     "build-client": "cd client && npm run build",
-    "install-all": "npm install && concurrently \"cd functions && npm install\" \"cd client && npm install\"",
-    "start-index" : "cd functions && node index.js"
+    "install-all": "npm install && concurrently \"cd functions && npm install\" \"cd client && npm install\""
   },
   "author": "",
   "license": "ISC",
