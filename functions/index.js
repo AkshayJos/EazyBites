@@ -3,6 +3,7 @@ const {initializeApp} = require("firebase-admin/app");
 const {onRequest} = require("firebase-functions/v2/https");
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 initializeApp();
 
