@@ -16,12 +16,12 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 // ENV setup
-const envPath = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
-require("dotenv-safe").config({
-  path: envPath,
-  allowEmptyValues: true,
-  example: ".env",
-});
+// const envPath = process.env.NODE_ENV === "production" ? ".env.production" : ".env.development";
+// require("dotenv-safe").config({
+//   path: envPath,
+//   allowEmptyValues: true,
+//   example: ".env",
+// });
 
 app.use(express.static(path.join(__dirname,"../client/build")));
 app.get('*',function(_,res){
