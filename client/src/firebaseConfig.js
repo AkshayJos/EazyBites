@@ -15,6 +15,8 @@ const firebaseConfig = {
   databaseURL: process.env.REACT_APP_FIREBASE_RTD_URL,
 };
 
+console.log(firebaseConfig)
+
 // Initialize Firebase only if no apps have been initialized
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
