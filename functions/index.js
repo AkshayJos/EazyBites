@@ -34,13 +34,6 @@ app.use(express.urlencoded({extended: true}));
 //   example: ".env",
 // });
 
-app.use(express.static(path.join(__dirname,"../client/build")));
-app.get('*',function(_,res){
-    res.sendFile(path.join(__dirname,"../client/build/index.html"),function(error){
-      res.status(500).send(error);
-    })
-})
-
 // import routes
 const userRoutes = require("./routes/users");
 const sellerMenuRoutes = require("./routes/sellerMenu");
@@ -56,6 +49,13 @@ app.use("/food", foodRoutes);
 app.use("/orders", orderRoutes);
 app.use("/categories", categoriesRoutes);
 app.use("/search", searchRoutes);
+
+app.use(express.static(path.join(__dirname,"../client/build")));
+app.get('*',function(_,res){
+    res.sendFile(path.join(__dirname,"../client/build/index.html"),function(error){
+      res.status(500).send(error);
+    })
+})
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
