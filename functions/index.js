@@ -1,11 +1,22 @@
 /* eslint-disable max-len */
 const {initializeApp} = require("firebase-admin/app");
 const {onRequest} = require("firebase-functions/v2/https");
+const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const dotenv = require("dotenv");
 
-initializeApp();
+dotenv.config();
+
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  }),
+  databaseURL: process.env.REACT_APP_FIREBASE_RTD_URL,
+});
 
 // Initialize Express app
 const app = express();

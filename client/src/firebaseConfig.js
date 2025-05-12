@@ -4,8 +4,6 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
 
-console.log("Before firebaseConfig");
-
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -13,11 +11,10 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+  // measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
   databaseURL: process.env.REACT_APP_FIREBASE_RTD_URL,
 };
 
-console.log(firebaseConfig)
 
 // Initialize Firebase only if no apps have been initialized
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
