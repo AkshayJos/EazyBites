@@ -69,7 +69,6 @@ const MyStall = () => {
       }
 
       setUser(currentUser);
-      console.log("Current user ID:", currentUser.uid);
 
       try {
         const userDocRef = doc(db, "users", currentUser.uid);

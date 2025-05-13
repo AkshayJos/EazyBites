@@ -130,7 +130,7 @@ const Food = ({ vendorStatus, categoryStatuses, searchResults, searchLoading, is
         
         // Get category statuses for this vendor
         const vendorCategoryStatuses = categoryStatuses?.[vendorId] || {};
-
+        
         // Process each category
         for (const category of vendorCategories) {
           const categoryId = category.id;
@@ -143,6 +143,7 @@ const Food = ({ vendorStatus, categoryStatuses, searchResults, searchLoading, is
             const items = await fetchItemsForCategory(vendorId, categoryId);
             console.log(`Category ${categoryId}: Found ${items.length} items`);
             allFoodItems.push(...items);
+            console.log("---------------------")
           }
         }
       }

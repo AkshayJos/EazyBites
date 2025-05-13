@@ -49,7 +49,6 @@ const StarRating = ({ initialRating = 0, onRatingChange, readOnly = false }) => 
 
 // Modal component for rating
 const RatingModal = ({ order, onClose, onRatingSubmit }) => {
-  console.log(order);
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   

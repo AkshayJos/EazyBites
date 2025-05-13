@@ -217,7 +217,6 @@ const Signup = () => {
                 return;
             }
             await saveUserToFirestore(result.user, false);
-            console.log("Phone User:", result.user);
         } catch (error) {
             console.error("OTP Verification Error:", error);
             alert("Invalid OTP. Please try again.");
