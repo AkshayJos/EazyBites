@@ -1,21 +1,8 @@
-/* eslint-disable require-jsdoc */
-/* eslint-disable max-len */
-/* eslint-disable new-cap */
 const express = require("express");
 const router = express.Router();
 const admin = require("firebase-admin");
 const {getFirestore} = require("firebase-admin/firestore");
 const db = getFirestore();
-
-// Priority fields
-// const priorities = [
-//   "name", // 1. food name
-//   "description", // 2. food description
-//   "categoryName", // 3. category name
-//   "stallName", // 4. vendor's name
-//   "stallDescription", // 5. vendor's description
-//   "landMark", // 6. vendor's landmark
-// ];
 
 // Helper function to compute priority rank
 function getMatchPriority(query, foodItem, vendorDetails, categoryDetails) {

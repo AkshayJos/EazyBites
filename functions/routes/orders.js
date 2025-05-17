@@ -81,7 +81,7 @@ router.get("/history/:uid", async (req, res) => {
     const {uid} = req.params;
     const {lastOrderId} = req.query;
     const pageSize = 10; // Number of orders per page
-
+ 
     // Reference to user's orders subcollection
     let userOrdersRef = db.collection("users").doc(uid).collection("orders")
         .where("status", "in", ["completed", "cancelled"])

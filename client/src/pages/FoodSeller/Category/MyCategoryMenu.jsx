@@ -225,9 +225,10 @@ const MyCategoryMenu = () => {
     };
 
     const openEditModal = async (item) => {
+        console.log(item)
         try {
             // Fetch complete item details before opening modal
-            const response = await axios.get(`${API}/seller/${auth.currentUser.uid}/items/${cid}/${item.id}`);
+            const response = await axios.get(`${API}/seller/${auth.currentUser.uid}/items/${cid}/${item.fid}`);
             setModalMode('edit');
             setSelectedItem(response.data);
             setIsModalOpen(true);

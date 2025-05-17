@@ -9,7 +9,7 @@ const db = getFirestore();
 const {getStorage} = require("firebase-admin/storage");
 
 // API
-const API = process.env.API_URL;
+const API = process.env.SERVER_URL;
 
 // Reference to the Realtime Database
 const realtimeDB = admin.database();
@@ -149,26 +149,10 @@ router.delete("/:uid/delete/:cid", async (req, res) => {
     // Delete all food items in the category
     await Promise.all(categoryItemsSnapshot.docs.map(async (doc) => {
       const foodItemId = doc.data().foodItemId;
-      console.log(`${API}/seller/${uid}/item/${cid}/${foodItemId}`);
+      // console.log(`${API}/seller/${uid}/item/${cid}/${foodItemId}`);
       await axios.delete(`${API}/seller/${uid}/item/${cid}/${foodItemId}`);
     }));
 
-    // Delete the category image from Cloud Storage if it exists
-    if (photoURL) {
-      try {
-        const storage = getStorage();
-        const bucket = storage.bucket();
-
-        // Extract the file path from the URL using the same method as in food item deletion
-        const filePath = decodeURIComponent(photoURL.split("/o/")[1].split("?")[0]);
-        await bucket.file(filePath).delete();
-
-        console.log(`Deleted category image: ${filePath}`);
-      } catch (storageError) {
-        // Log the error but continue with category deletion
-        console.error("Error deleting image from storage:", storageError);
-      }
-    }
 
     // Delete the category itself from Firestore
     await categoryRef.delete();

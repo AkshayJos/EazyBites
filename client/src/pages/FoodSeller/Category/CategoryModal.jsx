@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../../firebaseConfig';
+import axios from 'axios';
+
+const API = process.env.REACT_APP_API;
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
@@ -100,36 +101,60 @@ const CategoryModal = ({ isOpen, onClose, onSubmit, category, mode = 'add', vend
         setFormData({ ...formData, photoURL: '' });
     };
 
-    const uploadPhoto = async () => {
-        // If no new photo is selected or it's an existing photo, return the existing URL
-        if (!selectedPhoto || selectedPhoto.isExisting) {
-            return selectedPhoto?.preview || '';
-        }
+    // const uploadPhoto = async () => {
+    //     // If no new photo is selected or it's an existing photo, return the existing URL
+    //     if (!selectedPhoto || selectedPhoto.isExisting) {
+    //         return selectedPhoto?.preview || '';
+    //     }
 
-        const timestamp = Date.now();
-        const fileName = `categories/${timestamp}_${selectedPhoto.file.name}`;
-        const storageRef = ref(storage, fileName);
+    //     const timestamp = Date.now();
+    //     const fileName = `categories/${timestamp}_${selectedPhoto.file.name}`;
+    //     const storageRef = ref(storage, fileName);
         
-        const uploadTask = uploadBytesResumable(storageRef, selectedPhoto.file);
+    //     const uploadTask = uploadBytesResumable(storageRef, selectedPhoto.file);
         
-        return new Promise((resolve, reject) => {
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setUploadProgress(progress);
-                },
-                (error) => {
-                    setError(`Error uploading ${selectedPhoto.file.name}`);
-                    reject(error);
-                },
-                async () => {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    setUploadProgress(0);
-                    resolve(downloadURL);
-                }
-            );
-        });
-    };
+    //     return new Promise((resolve, reject) => {
+    //         uploadTask.on('state_changed',
+    //             (snapshot) => {
+    //                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    //                 setUploadProgress(progress);
+    //             },
+    //             (error) => {
+    //                 setError(`Error uploading ${selectedPhoto.file.name}`);
+    //                 reject(error);
+    //             },
+    //             async () => {
+    //                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+    //                 setUploadProgress(0);
+    //                 resolve(downloadURL);
+    //             }
+    //         );
+    //     });
+    // };
+
+    const uploadPhoto = async () => {
+    if (!selectedPhoto || selectedPhoto.isExisting) {
+      return selectedPhoto?.preview || "";
+    }
+        const formData = new FormData();
+        formData.append("name", selectedPhoto.file.name);
+        formData.append("file", selectedPhoto.file);
+
+    try {
+      const { data } = await axios.post(`${API}/image/file/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          const progress = (progressEvent.loaded / progressEvent.total) * 100;
+          setUploadProgress(progress);
+        },
+      });
+
+      return data;
+    } catch (error) {
+      setError(`Error uploading ${selectedPhoto.file.name}`);
+      throw error;
+    }
+  };
 
     const handleSubmit = async (e) => {
         e.preventDefault();

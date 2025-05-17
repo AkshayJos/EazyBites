@@ -21,7 +21,7 @@ const FoodCard = ({ item, onEdit, onDelete }) => {
                 </div>
                 <div className="MyMenu-card-actions">
                     <button onClick={() => onEdit(item)} className="MyMenu-edit-btn">Edit</button>
-                    <button onClick={() => onDelete(item.id)} className="MyMenu-delete-btn">Delete</button>
+                    <button onClick={() => onDelete(item.fid)} className="MyMenu-delete-btn">Delete</button>
                 </div>
             </div>
         </motion.div>

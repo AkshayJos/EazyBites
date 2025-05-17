@@ -1,11 +1,10 @@
-/* eslint-disable no-prototype-builtins */
-/* eslint-disable max-len */
-/* eslint-disable new-cap */
 const express = require("express");
 const router = express.Router();
 const {getFirestore} = require("firebase-admin/firestore");
 const db = getFirestore();
 const {getStorage} = require("firebase-admin/storage");
+const admin = require("../config/admin");
+
 
 // Fetches paginated menu items for a specific seller
 router.get("/:uid", async (req, res) => {
@@ -97,68 +96,6 @@ router.get("/:uid/items/:cid/:fid", async (req, res) => {
   }
 });
 
-// Creates a new food item and adds it to seller's menu
-// router.post("/:uid/add", async (req, res) => {
-//   try {
-//     const {uid} = req.params;
-//     const {name, description, price, photoURLs} = req.body;
-
-//     // Validate required fields
-//     if (!uid || !name || !price || !photoURLs || !Array.isArray(photoURLs) || photoURLs.length === 0) {
-//       return res.status(400).json({error: "Missing required fields"});
-//     }
-
-//     // Check if user exists and has set their stallName
-//     const userDoc = await db.collection("users").doc(uid).get();
-
-//     if (!userDoc.exists) {
-//       return res.status(404).json({error: "User not found"});
-//     }
-
-//     const userData = userDoc.data();
-
-//     // Check if stallName exists and is not empty
-//     if (!userData.stallName || userData.stallName.trim() === "") {
-//       return res.status(400).json({
-//         error: "Please set your stall name before adding food items",
-//         code: "STALL_NAME_REQUIRED",
-//       });
-//     }
-
-//     // Create new food item
-//     const foodItemRef = db.collection("foodItems").doc();
-//     const foodItem = {
-//       seller: uid,
-//       name,
-//       description: description || "",
-//       price,
-//       photoURLs,
-//       rating: 0,
-//       createdAt: FieldValue.serverTimestamp(),
-//     };
-
-//     await foodItemRef.set(foodItem);
-
-//     // Add reference to seller's menu
-//     await db.collection("users")
-//         .doc(uid)
-//         .collection("myMenu")
-//         .doc()
-//         .set({
-//           foodItemId: foodItemRef.id,
-//           createdAt: FieldValue.serverTimestamp(),
-//         });
-
-//     res.status(201).json({
-//       fid: foodItemRef.id,
-//       ...foodItem,
-//     });
-//   } catch (error) {
-//     console.error("Error creating food item:", error);
-//     res.status(500).json({error: "Failed to create food item"});
-//   }
-// });
-
 // Updates an existing food item
 router.put("/:uid/update/:cid/:fid", async (req, res) => {
   try {
@@ -197,106 +134,49 @@ router.put("/:uid/update/:cid/:fid", async (req, res) => {
   }
 });
 
-// Deletes a food item along with its images from storage
-// router.delete("/:uid/item/:fid", async (req, res) => {
-//   try {
-//     const {uid, fid} = req.params;
-
-//     // Verify the item belongs to the seller
-//     const menuItemRef = await db.collection("users")
-//         .doc(uid)
-//         .collection("myMenu")
-//         .where("foodItemId", "==", fid)
-//         .get();
-
-//     if (menuItemRef.empty) {
-//       return res.status(404).json({error: "Item not found in seller's menu"});
-//     }
-
-//     // Fetch the food item details
-//     const foodItemDoc = await db.collection("foodItems").doc(fid).get();
-//     if (!foodItemDoc.exists) {
-//       return res.status(404).json({error: "Food item not found"});
-//     }
-
-//     const foodItemData = foodItemDoc.data();
-
-//     // Delete images from Firebase Storage
-//     if (foodItemData.photoURLs && Array.isArray(foodItemData.photoURLs)) {
-//       const storage = getStorage();
-//       const bucket = storage.bucket();
-
-//       await Promise.all(
-//           foodItemData.photoURLs.map(async (photoURL) => {
-//             const filePath = decodeURIComponent(photoURL.split("/o/")[1].split("?")[0]); // Extract path
-//             await bucket.file(filePath).delete();
-//           }),
-//       );
-//     }
-
-//     // Delete food item document
-//     await db.collection("foodItems").doc(fid).delete();
-
-//     // Delete the menu reference from seller's `myMenu`
-//     const batch = db.batch();
-//     menuItemRef.forEach((doc) => batch.delete(doc.ref));
-//     await batch.commit();
-
-//     res.json({message: "Food item deleted successfully"});
-//   } catch (error) {
-//     res.status(500).json({error: "Failed to delete food item"});
-//   }
-// });
 
 // Deletes a food item and removes its reference from categoryItems
 router.delete("/:uid/item/:cid/:fid", async (req, res) => {
   try {
-    const {uid, cid, fid} = req.params;
+    const { uid, cid, fid } = req.params;
 
-    // Reference to the categoryItems subcollection
-    const categoryItemRef = db.collection("users")
-        .doc(uid)
-        .collection("myMenu")
-        .doc(cid)
-        .collection("categoryItems")
-        .where("foodItemId", "==", fid);
+    const db = admin.firestore();
 
-    const snapshot = await categoryItemRef.get();
-    if (snapshot.empty) {
-      return res.status(404).json({error: "Item not found in category"});
+    // Reference to categoryItems subcollection where foodItemId matches fid
+    const categoryItemSnapshot = await db
+      .collection("users")
+      .doc(uid)
+      .collection("myMenu")
+      .doc(cid)
+      .collection("categoryItems")
+      .where("foodItemId", "==", fid)
+      .get();
+
+    if (categoryItemSnapshot.empty) {
+      return res.status(404).json({ error: "Item not found in categoryItems" });
     }
 
-    // Fetch the food item details
-    const foodItemDoc = await db.collection("foodItems").doc(fid).get();
+    // Fetch food item document
+    const foodItemRef = db.collection("foodItems").doc(fid);
+    const foodItemDoc = await foodItemRef.get();
+
     if (!foodItemDoc.exists) {
-      return res.status(404).json({error: "Food item not found"});
-    }
-
-    const foodItemData = foodItemDoc.data();
-
-    // Delete images from Firebase Storage
-    if (foodItemData.photoURLs && Array.isArray(foodItemData.photoURLs)) {
-      const storage = getStorage();
-      const bucket = storage.bucket();
-
-      await Promise.all(
-          foodItemData.photoURLs.map(async (photoURL) => {
-            const filePath = decodeURIComponent(photoURL.split("/o/")[1].split("?")[0]);
-            await bucket.file(filePath).delete();
-          }),
-      );
+      return res.status(404).json({ error: "Food item not found" });
     }
 
     // Delete food item document
-    await db.collection("foodItems").doc(fid).delete();
+    await foodItemRef.delete();
 
-    // Remove reference from categoryItems subcollection
-    await snapshot.docs[0].ref.delete();
+    // Delete all matched categoryItems
+    await Promise.all(categoryItemSnapshot.docs.map(doc => doc.ref.delete()));
 
-    res.json({message: "Food item deleted successfully"});
+    res.json({ message: "✅ Food item and related references deleted successfully" });
   } catch (error) {
-    res.status(500).json({error: "Failed to delete food item"});
+    console.error("❌ Error deleting food item:", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
 
 module.exports = router;

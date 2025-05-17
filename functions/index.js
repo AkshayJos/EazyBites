@@ -1,22 +1,13 @@
 /* eslint-disable max-len */
 const {initializeApp} = require("firebase-admin/app");
 const {onRequest} = require("firebase-functions/v2/https");
-const admin = require("firebase-admin");
+const admin = require("./config/admin");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const dotenv = require("dotenv");
 
 dotenv.config();
-
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  }),
-  databaseURL: process.env.REACT_APP_FIREBASE_RTD_URL,
-});
 
 // Initialize Express app
 const app = express();
@@ -41,6 +32,8 @@ const foodRoutes = require("./routes/food");
 const orderRoutes = require("./routes/orders");
 const categoriesRoutes = require("./routes/categories");
 const searchRoutes = require("./routes/search");
+const imageRoutes = require("./routes/image");
+const Connection = require("./config/database");
 
 // Use routes
 app.use("/users", userRoutes);
@@ -49,6 +42,7 @@ app.use("/food", foodRoutes);
 app.use("/orders", orderRoutes);
 app.use("/categories", categoriesRoutes);
 app.use("/search", searchRoutes);
+app.use("/image", imageRoutes);
 
 app.use(express.static(path.join(__dirname,"../client/build")));
 app.get('*',function(_,res){
@@ -57,7 +51,14 @@ app.get('*',function(_,res){
     })
 })
 
+const USERNAME = process.env.MONGODB_USERNAME;
+const PASSWORD = process.env.MONGODB_PASSWORD;
+
+const URL = process.env.MONGODB_URI || `mongodb+srv://${USERNAME}:${PASSWORD}@cluster0.c2ijjo2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+Connection(URL);

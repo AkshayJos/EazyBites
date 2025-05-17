@@ -127,7 +127,6 @@ const MyMenu = () => {
                     if (vendorTypeSnapshot.exists()) {
                         const vendorTypeValue = vendorTypeSnapshot.val();
                         setVendorType(vendorTypeValue);
-                        console.log("VendorType: ", vendorTypeValue); // Use vendorTypeValue instead of vendorType state
                     } else {
                         console.log("No vendor type found in realtime database");
                         setVendorType(null);
@@ -196,7 +195,6 @@ const MyMenu = () => {
         try {
             if (vendorType === 'shop') {
                 const categoryName = formData.categoryName.toLowerCase();
-                console.log(categoryName);
                 const restrictedNames = ['stall', 'stalls'];
                 
                 if (restrictedNames.includes(categoryName) || categoryName.includes('stall')) {
@@ -245,7 +243,6 @@ const MyMenu = () => {
 
     const handleCategoryClick = (category) => {
         navigate(`/my-menu/category/${category.id}`);
-        console.log('Clicked category:', category);
     };
 
     const openAddModal = () => {
